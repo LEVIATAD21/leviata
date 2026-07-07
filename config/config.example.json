@@ -1,0 +1,33 @@
+{
+  "provider": "openai",
+  "api_key": "SUA_CHAVE_AQUI",
+  "model": "gpt-4o",
+  "base_url": null,
+
+  "_comentario_provedores": "Troque 'provider' por: openai, anthropic, google, ollama, custom",
+
+  "_exemplo_anthropic": {
+    "provider": "anthropic",
+    "api_key": "sk-ant-...",
+    "model": "claude-3-5-sonnet-20241022"
+  },
+
+  "_exemplo_google": {
+    "provider": "google",
+    "api_key": "AIza...",
+    "model": "gemini-2.0-flash"
+  },
+
+  "_exemplo_ollama_local": {
+    "provider": "ollama",
+    "model": "llama3",
+    "base_url": "http://localhost:11434"
+  },
+
+  "_exemplo_custom_api": {
+    "provider": "custom",
+    "api_key": "SUA_CHAVE",
+    "base_url": "https://api.sua-ia.com/v1",
+    "model": "nome-do-modelo"
+  }
+}

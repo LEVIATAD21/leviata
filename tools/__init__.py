@@ -1,0 +1,144 @@
+"""
+Ferramentas do Agente de IA
+Cada ferramenta pode ser executada pelo agente para interagir com o sistema.
+"""
+import subprocess
+import os
+import requests
+from pathlib import Path
+
+
+def shell_execute(command: str) -> str:
+    """
+    Executa um comando no terminal Linux.
+    Suporta comandos complexos, pipes, redirecionamentos, etc.
+    """
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=os.getcwd()
+        )
+        output = ""
+        if result.stdout:
+            output += result.stdout
+        if result.stderr:
+            output += f"\n[STDERR]: {result.stderr}"
+        if not output.strip():
+            output = f"Comando executado com sucesso. Código de saída: {result.returncode}"
+        return output
+    except subprocess.TimeoutExpired:
+        return "Erro: Comando excedeu o tempo limite de 120 segundos."
+    except Exception as e:
+        return f"Erro ao executar comando: {str(e)}"
+
+
+def read_file(path: str) -> str:
+    """Lê o conteúdo de um arquivo."""
+    try:
+        with open(os.path.expanduser(path), 'r', encoding='utf-8', errors='replace') as f:
+            content = f.read()
+        return content if content else "(arquivo vazio)"
+    except FileNotFoundError:
+        return f"Erro: Arquivo '{path}' não encontrado."
+    except Exception as e:
+        return f"Erro ao ler arquivo: {str(e)}"
+
+
+def write_file(path: str, content: str) -> str:
+    """Escreve conteúdo em um arquivo, criando diretórios se necessário."""
+    try:
+        full_path = Path(os.path.expanduser(path))
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(full_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        return f"Arquivo '{path}' escrito com sucesso ({len(content)} caracteres)."
+    except Exception as e:
+        return f"Erro ao escrever arquivo: {str(e)}"
+
+
+def web_search(query: str) -> str:
+    """Busca informações na web usando DuckDuckGo (sem API key necessária)."""
+    try:
+        url = "https://api.duckduckgo.com/"
+        params = {
+            "q": query,
+            "format": "json",
+            "no_html": "1",
+            "skip_disambig": "1"
+        }
+        response = requests.get(url, params=params, timeout=10)
+        data = response.json()
+        
+        results = []
+        if data.get("AbstractText"):
+            results.append(f"Resumo: {data['AbstractText']}")
+        
+        for topic in data.get("RelatedTopics", [])[:5]:
+            if isinstance(topic, dict) and topic.get("Text"):
+                results.append(f"- {topic['Text']}")
+        
+        if not results:
+            return f"Nenhum resultado encontrado para: {query}"
+        
+        return "\n".join(results)
+    except Exception as e:
+        return f"Erro na busca: {str(e)}"
+
+
+def web_fetch(url: str) -> str:
+    """Acessa uma URL e retorna o conteúdo em texto."""
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+        }
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+        
+        # Tenta extrair texto limpo se for HTML
+        content_type = response.headers.get("content-type", "")
+        if "html" in content_type:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(response.text, 'html.parser')
+            # Remove scripts e estilos
+            for tag in soup(["script", "style", "nav", "footer"]):
+                tag.decompose()
+            text = soup.get_text(separator='\n', strip=True)
+            # Limita o tamanho
+            return text[:8000] + ("..." if len(text) > 8000 else "")
+        else:
+            return response.text[:8000]
+    except Exception as e:
+        return f"Erro ao acessar URL: {str(e)}"
+
+
+def register_all_tools(agent):
+    """Registra todas as ferramentas no agente."""
+    agent.register_tool(
+        "shell",
+        lambda command: shell_execute(command),
+        "Executa qualquer comando no terminal Linux. Input: {command: 'ls -la'}"
+    )
+    agent.register_tool(
+        "read_file",
+        lambda path: read_file(path),
+        "Lê o conteúdo de um arquivo. Input: {path: '/caminho/arquivo.txt'}"
+    )
+    agent.register_tool(
+        "write_file",
+        lambda path, content: write_file(path, content),
+        "Escreve conteúdo em um arquivo. Input: {path: '...', content: '...'}"
+    )
+    agent.register_tool(
+        "web_search",
+        lambda query: web_search(query),
+        "Busca na web. Input: {query: 'sua busca aqui'}"
+    )
+    agent.register_tool(
+        "web_fetch",
+        lambda url: web_fetch(url),
+        "Acessa uma URL e retorna o conteúdo. Input: {url: 'https://...'}"
+    )

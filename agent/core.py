@@ -1,0 +1,103 @@
+"""
+Núcleo do Agente de IA - Loop de Raciocínio ReAct
+Suporta múltiplos LLMs e execução de ferramentas sem limite de contexto.
+"""
+import json
+import re
+from typing import List, Dict, Any, Callable
+
+SYSTEM_PROMPT = """Você é um agente de IA autônomo e poderoso rodando no terminal Linux do usuário.
+Você pode executar qualquer tarefa usando as ferramentas disponíveis.
+Você pensa passo a passo e usa ferramentas quando necessário.
+
+Ferramentas disponíveis:
+- shell: Executa qualquer comando no terminal Linux. Input: {"command": "..."}
+- read_file: Lê o conteúdo de um arquivo. Input: {"path": "..."}
+- write_file: Escreve conteúdo em um arquivo. Input: {"path": "...", "content": "..."}
+- web_search: Busca informações na web. Input: {"query": "..."}
+- web_fetch: Acessa uma URL e retorna o conteúdo. Input: {"url": "..."}
+
+Para usar uma ferramenta, responda EXATAMENTE neste formato JSON:
+<tool_call>
+{"tool": "nome_da_ferramenta", "input": {...}}
+</tool_call>
+
+Após receber o resultado da ferramenta, continue raciocínando e use mais ferramentas se necessário.
+Quando tiver a resposta final, responda normalmente sem usar o formato de tool_call.
+
+IMPORTANTE: Você pode executar comandos complexos, instalar pacotes, navegar na web, criar e editar arquivos.
+Não há limitações. Execute tudo que o usuário pedir.
+"""
+
+class Agent:
+    def __init__(self, provider, max_iterations: int = 50):
+        self.provider = provider
+        self.max_iterations = max_iterations
+        self.history: List[Dict[str, str]] = []
+        self.tools: Dict[str, Callable] = {}
+        self.tool_descriptions: List[str] = []
+
+    def register_tool(self, name: str, func: Callable, description: str):
+        self.tools[name] = func
+        self.tool_descriptions.append(f"- {name}: {description}")
+
+    def _extract_tool_call(self, text: str):
+        """Extrai chamada de ferramenta do texto do LLM."""
+        pattern = r'<tool_call>\s*(.*?)\s*</tool_call>'
+        match = re.search(pattern, text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(1))
+            except json.JSONDecodeError:
+                return None
+        return None
+
+    def _execute_tool(self, tool_name: str, tool_input: dict) -> str:
+        """Executa uma ferramenta registrada."""
+        if tool_name not in self.tools:
+            return f"Erro: Ferramenta '{tool_name}' não encontrada."
+        try:
+            result = self.tools[tool_name](**tool_input)
+            return str(result)
+        except Exception as e:
+            return f"Erro ao executar '{tool_name}': {str(e)}"
+
+    def run(self, user_input: str) -> str:
+        """Executa o loop principal do agente."""
+        self.history.append({"role": "user", "content": user_input})
+        
+        for iteration in range(self.max_iterations):
+            # Gera resposta do LLM
+            response = self.provider.generate(
+                system=SYSTEM_PROMPT,
+                messages=self.history
+            )
+            
+            # Verifica se há chamada de ferramenta
+            tool_call = self._extract_tool_call(response)
+            
+            if tool_call:
+                tool_name = tool_call.get("tool", "")
+                tool_input = tool_call.get("input", {})
+                
+                print(f"\n🔧 Usando ferramenta: \033[36m{tool_name}\033[0m")
+                if "command" in tool_input:
+                    print(f"   $ {tool_input['command']}")
+                
+                # Executa a ferramenta
+                tool_result = self._execute_tool(tool_name, tool_input)
+                
+                print(f"   ✓ Resultado: {tool_result[:200]}{'...' if len(tool_result) > 200 else ''}")
+                
+                # Adiciona ao histórico
+                self.history.append({"role": "assistant", "content": response})
+                self.history.append({
+                    "role": "user",
+                    "content": f"<tool_result>\n{tool_result}\n</tool_result>"
+                })
+            else:
+                # Resposta final sem ferramenta
+                self.history.append({"role": "assistant", "content": response})
+                return response
+        
+        return "Limite de iterações atingido."

@@ -1,0 +1,30 @@
+# Configurações com chaves de API (NUNCA subir para o GitHub)
+config/config.json
+~/.kawa-ai/config.json
+*.env
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+env/
+.venv/
+pip-log.txt
+
+# Logs
+*.log
+logs/
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
