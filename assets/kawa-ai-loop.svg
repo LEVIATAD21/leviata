@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">KAWA-AI em movimento</title><desc id="desc">Módulos de ferramenta e orquestração animados.</desc>
+  <style>@keyframes orbit{to{transform:rotate(360deg)}}@keyframes blink{0%,55%,100%{opacity:.25}60%,75%{opacity:1}}.orbit{transform-origin:930px 360px;animation:orbit 8s linear infinite}.blink{animation:blink 2.4s steps(1,end) infinite}@media(prefers-reduced-motion:reduce){.orbit,.blink{animation:none}}</style>
+  <image href="kawa-ai-hero.png" width="1280" height="720" preserveAspectRatio="xMidYMid slice"/>
+  <g class="orbit" fill="none" stroke="#7ff6db" stroke-width="4" opacity=".85"><circle cx="930" cy="360" r="94" stroke-dasharray="18 16"/><circle cx="1024" cy="360" r="8" fill="#b5ffea" stroke="none"/></g>
+  <rect class="blink" x="770" y="482" width="95" height="8" rx="4" fill="#baff4e"/>
+</svg>
