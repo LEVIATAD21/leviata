@@ -1,4 +1,9 @@
 # KAWA-AI 🤖
+
+<p align="center">
+  <img src="assets/kawa-ai-hero.png" alt="Ilustração do KAWA-AI como agente modular de terminal" width="100%" />
+</p>
+
 > Agente de IA Autônomo para Terminal Linux — Desenvolvido por Kawã Silva
 
 Um agente de IA poderoso que roda diretamente no seu terminal Linux Mint, capaz de executar qualquer tarefa: instalar programas, criar arquivos, navegar na web, escrever código e muito mais. Suporta **qualquer LLM** via API.
@@ -11,8 +16,8 @@ Um agente de IA poderoso que roda diretamente no seu terminal Linux Mint, capaz 
 - **Execução de Shell**: Executa qualquer comando Linux no seu PC
 - **Navegação Web**: Acessa URLs e busca informações na internet
 - **Leitura/Escrita de Arquivos**: Cria, lê e edita qualquer arquivo
-- **Loop Autônomo**: Pensa, age e itera até completar a tarefa (ReAct)
-- **Sem limite de contexto**: Gerencia o histórico automaticamente
+- **Loop Autônomo**: Planeja, executa ferramentas configuradas e itera conforme a tarefa e as permissões disponíveis
+- **Histórico configurável**: Gerencia o contexto localmente dentro dos limites do modelo e do provedor selecionado
 - **Interface bonita**: Terminal colorido e intuitivo
 
 ---
