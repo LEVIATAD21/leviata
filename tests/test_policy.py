@@ -283,6 +283,27 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertEqual(http.called["kwargs"]["params"]["limit"], "0")
 
+    def test_supabase_setup_uses_connection_vault_then_runs_read_only_check(self):
+        class FakeConnections:
+            def __init__(self):
+                self.endpoint = None
+                self.token = None
+            def set_endpoint(self, service, endpoint): self.endpoint = endpoint
+            def set_token(self, service, token, scopes): self.token = token
+            def get_endpoint(self, service): return self.endpoint
+            def get_token(self, service): return self.token
+        class Response:
+            status_code = 200
+            def raise_for_status(self): return None
+        class FakeHttp:
+            def get(self, *args, **kwargs): return Response()
+
+        connections = FakeConnections()
+        result = SupabaseKnowledgeStore(connections, FakeHttp()).configure("https://example.supabase.co", "token-local")
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(connections.endpoint, "https://example.supabase.co")
+        self.assertEqual(connections.token, "token-local")
+
 
 if __name__ == "__main__":
     unittest.main()

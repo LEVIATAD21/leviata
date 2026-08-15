@@ -189,6 +189,8 @@ def main():
     parser.add_argument("--supabase-store", action="store_true", help="Persiste explicitamente o resultado NVIDIA aprovado no Supabase")
     parser.add_argument("--supabase-table", type=str, default="kawa_knowledge", help="Tabela Supabase para resultados aprovados")
     parser.add_argument("--supabase-check", action="store_true", help="Verifica endpoint, token e leitura Supabase sem gravar dados")
+    parser.add_argument("--supabase-setup", action="store_true", help="Configura endpoint e token Supabase no cofre local por prompt oculto e verifica somente leitura")
+    parser.add_argument("--supabase-endpoint", type=str, help="Endpoint HTTPS usado junto de --supabase-setup")
     parser.add_argument("--media", action="store_true", help="Registra análise local de vídeo e transcrição por whisper.cpp")
     parser.add_argument("--extract-frames", type=str, help="Extrai quadros de um vídeo e sai")
     parser.add_argument("--frame-rate", type=float, default=0.2, help="Quadros por segundo na extração local (0,05 a 2)")
@@ -229,7 +231,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research and not args.supabase_check and not args.quality_audit and not args.design_brief:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -248,6 +250,11 @@ def main():
             return
         if args.supabase_check:
             print(json.dumps(SupabaseKnowledgeStore().check(args.supabase_table), ensure_ascii=False, indent=2))
+            return
+        if args.supabase_setup:
+            endpoint = args.supabase_endpoint or input("Project URL do Supabase (https://...): ").strip()
+            token = getpass.getpass("Chave Supabase local (não será exibida): ")
+            print(json.dumps(SupabaseKnowledgeStore().configure(endpoint, token, args.supabase_table), ensure_ascii=False, indent=2))
             return
         if args.quality_audit:
             selected_quality_tools = [item.strip() for item in args.quality_tools.split(",") if item.strip()]

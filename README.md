@@ -147,9 +147,8 @@ kawa --connection-remove instagram
 # Mantém uma sessão Google autorizada em um perfil isolado até que você a remova
 kawa --browser --browser-service google --policy ask --interactive
 
-# Salva o endpoint não secreto e o token de um projeto Supabase no cofre local
-kawa --connection-set-endpoint supabase --connection-endpoint "https://SEU-PROJETO.supabase.co"
-kawa --connection-set-token supabase --connection-scopes "knowledge_store"
+# Assistente único: salva o endpoint, pede a chave de modo oculto e valida leitura sem gravar dados
+kawa --supabase-setup --supabase-endpoint "https://SEU-PROJETO.supabase.co"
 
 # Consulta até três modelos NVIDIA, em sequência, apenas para pesquisa
 kawa --connection-set-token nvidia --connection-scopes "research"
@@ -239,9 +238,9 @@ Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotio
 
 Use `--nvidia-research` para obter poucos pareceres sequenciais de modelos disponíveis na sua conta NVIDIA. Cada resposta é entregue como um quadro de investigação, permitindo que o próximo modelo complemente ou critique o anterior. A chave é lida exclusivamente do cofre local criado por `--connection-set-token nvidia`; ela não aparece no comando, na auditoria, no Obsidian ou no repositório.
 
-`--supabase-store` é opcional e salva somente o relatório que você acabou de solicitar. Antes, configure o endpoint HTTPS e o token localmente. A tabela padrão é `kawa_knowledge` e deve aceitar as colunas `title`, `content`, `source` e `created_at`; as regras RLS permanecem responsabilidade do projeto Supabase. Conteúdo com padrões de chave, token ou senha é redigido antes do envio.
+`--supabase-setup` é o assistente de conexão local: salva o endpoint HTTPS, pede o token por campo oculto e executa uma verificação somente de leitura. `--supabase-store` é opcional e salva somente o relatório que você acabou de solicitar. A tabela padrão é `kawa_knowledge` e deve aceitar as colunas `title`, `content`, `source` e `created_at`. Conteúdo com padrões de chave, token ou senha é redigido antes do envio.
 
-O esquema reproduzível está em `docs/SUPABASE_SCHEMA.sql`. A tabela é criada com RLS ativo e sem políticas públicas: para este agente local, use uma credencial de servidor limitada ao projeto e guarde-a somente pelo prompt oculto de `--connection-set-token`; ela não deve ser colocada em arquivos `.env`, no Obsidian, no Git ou no chat.
+O esquema reproduzível está em `docs/SUPABASE_SCHEMA.sql`. A tabela é criada com RLS ativo e sem políticas públicas: para este agente local, use uma credencial de servidor limitada ao projeto e guarde-a somente pelo prompt oculto de `--supabase-setup`; ela não deve ser colocada em arquivos `.env`, no Obsidian, no Git ou no chat.
 
 O KAWA-AI não promete tokens ilimitados: cada modelo e serviço mantém limites próprios. Para não perder profundidade, ele usa diário Obsidian contínuo, contexto recente limitado e pesquisa dividida em quadros curtos. Consulte `docs/CLAUDE_CODE_REFERENCE.md` para os padrões de experiência adotados como referência.
 

@@ -8,7 +8,7 @@ from typing import Any
 
 import requests
 
-from agent.connections import ConnectionStore
+from agent.connections import ConnectionError, ConnectionStore
 
 
 class SupabaseMemoryError(RuntimeError):
@@ -55,6 +55,17 @@ class SupabaseKnowledgeStore:
             response.raise_for_status()
         except requests.RequestException as exc:
             raise SupabaseMemoryError("Não foi possível salvar o resultado no Supabase. Verifique tabela, RLS e permissões.") from exc
+
+    def configure(self, endpoint: str, token: str, table: str | None = None) -> dict[str, str | int]:
+        """Registra o acesso local e confirma leitura sem imprimir ou persistir o token em arquivo."""
+        if not endpoint or not token:
+            raise SupabaseMemoryError("Endpoint e token são obrigatórios para configurar o Supabase.")
+        try:
+            self.connections.set_endpoint("supabase", endpoint)
+            self.connections.set_token("supabase", token, ["knowledge_store"])
+        except ConnectionError as exc:
+            raise SupabaseMemoryError("Não foi possível salvar a conexão Supabase no cofre local.") from exc
+        return self.check(table)
 
     def check(self, table: str | None = None) -> dict[str, str | int]:
         """Valida endpoint, token e leitura da tabela sem inserir, alterar ou excluir registros."""
