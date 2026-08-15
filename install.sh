@@ -2,7 +2,7 @@
 # ╔═══════════════════════════════════════════════════════════════╗
 # ║         KAWA-AI - Script de Instalação para Linux            ║
 # ║   Uso: curl -fsSL https://raw.githubusercontent.com/         ║
-# ║        LEVIATAD21/manus-clone-ai/main/install.sh | bash      ║
+# ║        LEVIATAD21/manus-clone-ai/master/install.sh | bash    ║
 # ╚═══════════════════════════════════════════════════════════════╝
 
 set -e
@@ -17,6 +17,7 @@ NC='\033[0m'
 
 INSTALL_DIR="$HOME/.kawa-ai"
 REPO_URL="https://github.com/LEVIATAD21/manus-clone-ai.git"
+REPO_BRANCH="master"
 
 echo -e "${CYAN}${BOLD}"
 echo "╔═══════════════════════════════════════════════════════════════╗"
@@ -38,23 +39,29 @@ check_command() {
 }
 
 check_command "python3" "python3"
-check_command "pip3" "python3-pip"
 check_command "git" "git"
 
 # Clona ou atualiza o repositório
 echo -e "\n${YELLOW}[2/5] Baixando KAWA-AI...${NC}"
 if [ -d "$INSTALL_DIR/repo" ]; then
     echo "Atualizando repositório existente..."
-    cd "$INSTALL_DIR/repo" && git pull
+    cd "$INSTALL_DIR/repo" && git pull --ff-only origin "$REPO_BRANCH"
 else
     mkdir -p "$INSTALL_DIR"
-    git clone "$REPO_URL" "$INSTALL_DIR/repo"
+    git clone --branch "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR/repo"
 fi
 
-# Instala dependências Python
-echo -e "\n${YELLOW}[3/5] Instalando dependências Python...${NC}"
-pip3 install --user -q openai anthropic google-generativeai requests beautifulsoup4
-echo -e "${GREEN}✓ Dependências instaladas${NC}"
+# Cria ambiente Python isolado e instala dependências do repositório
+echo -e "\n${YELLOW}[3/5] Criando ambiente Python isolado...${NC}"
+VENV_DIR="$INSTALL_DIR/venv"
+if ! python3 -m venv "$VENV_DIR"; then
+    echo -e "${RED}Não foi possível criar o ambiente virtual.${NC}"
+    echo "Instale o suporte a venv e execute novamente: sudo apt-get install -y python3-venv"
+    exit 1
+fi
+"$VENV_DIR/bin/python" -m pip install --upgrade pip -q
+"$VENV_DIR/bin/python" -m pip install -r "$INSTALL_DIR/repo/requirements.txt" -q
+echo -e "${GREEN}✓ Ambiente e dependências instalados${NC}"
 
 # Cria o comando global 'kawa'
 echo -e "\n${YELLOW}[4/5] Criando comando 'kawa' no sistema...${NC}"
@@ -63,7 +70,7 @@ mkdir -p "$HOME/.local/bin"
 
 cat > "$LAUNCHER" << 'EOF'
 #!/usr/bin/env bash
-python3 "$HOME/.kawa-ai/repo/main.py" "$@"
+exec "$HOME/.kawa-ai/venv/bin/python" "$HOME/.kawa-ai/repo/main.py" "$@"
 EOF
 
 chmod +x "$LAUNCHER"
@@ -88,5 +95,6 @@ echo -e "\n${CYAN}Como usar:${NC}"
 echo -e "  ${BOLD}kawa${NC}                         # Inicia o chat interativo"
 echo -e "  ${BOLD}kawa \"sua tarefa aqui\"${NC}       # Executa uma tarefa direta"
 echo -e "  ${BOLD}kawa --provider ollama${NC}       # Usa modelos locais (grátis)"
-echo -e "\n${YELLOW}Na primeira execução, você será guiado para configurar sua API.${NC}"
+echo -e "\n${YELLOW}Na primeira execução, o cofre Obsidian será localizado e você poderá configurar o provedor.${NC}"
+echo -e "${YELLOW}Para automação de navegador, o KAWA-AI tenta reutilizar Chromium/Chrome já instalado.${NC}"
 echo -e "${YELLOW}Reinicie o terminal ou execute: source ~/.bashrc${NC}\n"

@@ -28,7 +28,7 @@ Um assistente local para terminal Linux Mint, capaz de ler e criar arquivos, pes
 ## 🚀 Instalação Rápida
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/LEVIATAD21/manus-clone-ai/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/LEVIATAD21/manus-clone-ai/master/install.sh | bash
 ```
 
 Depois, reinicie o terminal e use:
