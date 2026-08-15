@@ -173,6 +173,9 @@ kawa --transcribe ~/Vídeos/exemplo.mp4 --whisper-model ~/.kawa-ai/models/ggml-b
 # Faz auditoria estática defensiva no projeto atual e gera relatório JSON local
 kawa --policy proactive --workspace ~/Projetos/meu-app --quality-audit . --quality-tools ruff,bandit
 
+# Cria brief de design e arquitetura Mermaid editáveis para um produto
+kawa --policy proactive --workspace ~/Projetos/meu-app --design-brief "Painel de estudos com simulados" --design-medium site
+
 # Usando um provedor específico
 kawa --provider anthropic --model claude-3-5-sonnet-20241022 "sua tarefa"
 
@@ -227,6 +230,10 @@ Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotio
 ### Qualidade, programação e segurança defensiva
 
 `--quality-audit` executa verificações estáticas dentro do diretório de trabalho e grava o relatório em `kawa-quality/`. Ruff verifica qualidade e formatação de Python; Bandit procura padrões comuns de segurança em Python; Semgrep executa regras estáticas para código. O módulo não explora sistemas, não realiza varredura de rede e não opera fora do diretório configurado. Instale apenas as ferramentas que quiser usar no ambiente local: `python3 -m pip install ruff bandit semgrep`.
+
+### Design estruturado
+
+`--design-brief` gera um brief Markdown e um diagrama Mermaid editáveis em `kawa-design/`. Ele é uma etapa local de arquitetura e interface antes de iniciar um site, app, apresentação ou arte visual. Para imagens, vídeos e apresentações em provedores externos, o KAWA-AI continua usando apenas contas conectadas e uma solicitação específica do proprietário.
 
 ### Pesquisa NVIDIA e memória Supabase
 

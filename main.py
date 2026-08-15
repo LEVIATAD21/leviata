@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from agent.core import Agent
 from agent.connections import ConnectionError, ConnectionStore
 from agent.media import MediaError, MediaToolkit
+from agent.design import DesignError, DesignToolkit
 from agent.quality import QualityError, QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore, SupabaseMemoryError
@@ -196,6 +197,9 @@ def main():
     parser.add_argument("--quality", action="store_true", help="Registra auditoria local de código com ferramentas estáticas")
     parser.add_argument("--quality-audit", type=str, help="Audita arquivo ou diretório dentro da área de trabalho e sai")
     parser.add_argument("--quality-tools", type=str, default="ruff,bandit,semgrep", help="Ferramentas separadas por vírgula: ruff,bandit,semgrep")
+    parser.add_argument("--design", action="store_true", help="Registra criação local de briefs e arquiteturas de design")
+    parser.add_argument("--design-brief", type=str, help="Cria brief e arquitetura Mermaid para um pedido de design e sai")
+    parser.add_argument("--design-medium", type=str, default="produto-digital", help="Meio do design: site, app, apresentação, social ou produto-digital")
     
     args = parser.parse_args()
     config = load_config()
@@ -225,7 +229,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research and not args.supabase_check and not args.quality_audit:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research and not args.supabase_check and not args.quality_audit and not args.design_brief:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -235,6 +239,7 @@ def main():
     try:
         media = MediaToolkit(config.get("workspace", Path.cwd()))
         quality = QualityToolkit(config.get("workspace", Path.cwd()))
+        design = DesignToolkit(config.get("workspace", Path.cwd()))
         if args.extract_frames:
             print(media.extract_frames(args.extract_frames, args.frame_rate))
             return
@@ -247,6 +252,9 @@ def main():
         if args.quality_audit:
             selected_quality_tools = [item.strip() for item in args.quality_tools.split(",") if item.strip()]
             print(quality.audit(args.quality_audit, selected_quality_tools))
+            return
+        if args.design_brief:
+            print(design.create_brief(args.design_brief, args.design_medium))
             return
         if args.nvidia_research:
             requested = [model.strip() for model in (args.nvidia_models or "").split(",") if model.strip()]
@@ -310,7 +318,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media if args.media else None, quality=quality if args.quality else None)
+            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media if args.media else None, quality=quality if args.quality else None, design=design if args.design else None)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:
@@ -329,7 +337,7 @@ def main():
                 result = agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")
 
-    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError) as e:
+    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError) as e:
         print(f"{Colors.FAIL}Erro de integração: {str(e)}{Colors.RESET}")
         sys.exit(1)
     except Exception as e:

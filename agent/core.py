@@ -29,6 +29,7 @@ Ferramentas disponíveis:
 - media_extract_frames: Extrai quadros de um vídeo para a área de trabalho após confirmação. Input: {"input_path": "...", "fps": 0.2}
 - media_transcribe: Transcreve mídia por whisper.cpp após confirmação. Input: {"input_path": "..."}
 - quality_audit: Executa lint e auditoria defensiva estática no diretório de trabalho. Input: {"target_path": ".", "tools": ["ruff", "bandit", "semgrep"]}
+- design_brief: Cria brief de design e arquitetura Mermaid editáveis no diretório de trabalho. Input: {"request": "...", "medium": "site"}
 
 Para usar uma ferramenta, responda EXATAMENTE neste formato JSON:
 <tool_call>

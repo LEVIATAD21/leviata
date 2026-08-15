@@ -4,6 +4,7 @@ from pathlib import Path
 
 from agent.audit import AuditLogger
 from agent.connections import ConnectionStore
+from agent.design import DesignToolkit
 from agent.media import MediaError, MediaToolkit
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
@@ -44,6 +45,10 @@ class ToolPolicyTests(unittest.TestCase):
     def test_proactive_policy_allows_quality_audit(self):
         policy = ToolPolicy("proactive", self.workspace)
         self.assertEqual(policy.decide("quality_audit", {"target_path": "."}).decision, Decision.ALLOW)
+
+    def test_proactive_policy_allows_design_brief(self):
+        policy = ToolPolicy("proactive", self.workspace)
+        self.assertEqual(policy.decide("design_brief", {"request": "Site de estudos"}).decision, Decision.ALLOW)
 
     def test_high_impact_shell_requires_confirmation(self):
         policy = ToolPolicy("workspace", self.workspace)
@@ -199,6 +204,14 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("ruff: not_installed", result)
         self.assertIn("bandit: not_installed", result)
         self.assertTrue((workspace / "kawa-quality").exists())
+
+    def test_design_brief_creates_editable_markdown_and_mermaid(self):
+        toolkit = DesignToolkit(self.workspace)
+        result = toolkit.create_brief("Painel de estudos", "site")
+        self.assertIn("Brief criado", result)
+        files = list((self.workspace / "kawa-design").rglob("*"))
+        self.assertTrue(any(item.name == "design-brief.md" for item in files))
+        self.assertTrue(any(item.suffix == ".mmd" for item in files))
 
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:
