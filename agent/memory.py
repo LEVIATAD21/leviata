@@ -87,12 +87,9 @@ class ObsidianMemory:
 
     @staticmethod
     def default_search_roots(home: str | Path | None = None) -> list[Path]:
-        home_path = Path(home or Path.home()).expanduser()
-        return [
-            home_path,
-            Path("/mnt"),
-            Path("/media") / home_path.name,
-        ]
+        # A descoberta inicial percorre a árvore local inteira, mas lê somente nomes
+        # de diretório e ignora pseudo-sistemas, caches e dependências pesadas.
+        return [Path("/")]
 
     def _read_manifest(self) -> dict:
         try:

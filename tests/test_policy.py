@@ -132,6 +132,9 @@ class ToolPolicyTests(unittest.TestCase):
         (home / "Documents" / "Cofre" / "nota.md").write_text("não precisa ser lida", encoding="utf-8")
         self.assertEqual(ObsidianMemory.discover_vaults([home]), [(home / "Documents" / "Cofre").resolve()])
 
+    def test_default_discovery_starts_from_root(self):
+        self.assertEqual(ObsidianMemory.default_search_roots(), [Path("/")])
+
 
 if __name__ == "__main__":
     unittest.main()

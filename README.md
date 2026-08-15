@@ -161,9 +161,9 @@ Com `--auto-route`, perguntas explicativas são encaminhadas ao cérebro de conh
 
 ### Cofre Obsidian persistente
 
-Na primeira execução, o KAWA-AI procura diretórios `.obsidian` nos locais locais mais comuns. Se localizar somente um, salva o caminho em `~/.kawa-ai/config.json` e cria o arquivo vazio e único `KAWA-AI/Reasoning Diary.md`. A partir daí, a memória é sempre acrescentada no mesmo diário e cópias de recuperação permanecem no mesmo cofre. Caso existam vários cofres, o programa pede o caminho explicitamente em vez de escolher ou criar outro.
+Na primeira execução, o KAWA-AI procura diretórios `.obsidian` em toda a árvore local a partir de `/`, sem ler o conteúdo de notas. Diretórios dinâmicos, caches e dependências pesadas são excluídos. Se localizar somente um, salva o caminho em `~/.kawa-ai/config.json` e cria o arquivo vazio e único `KAWA-AI/Reasoning Diary.md`. A partir daí, a memória é sempre acrescentada no mesmo diário e cópias de recuperação permanecem no mesmo cofre. Caso existam vários cofres, o programa pede o caminho explicitamente em vez de escolher ou criar outro.
 
-Para procurar uma unidade ou caminho específico, use `--scan-root /caminho`; uma varredura a partir de `/` deve ser uma escolha consciente porque pode ser demorada. `--index-vault` mostra somente metadados de arquivos Markdown dentro do cofre escolhido.
+Para restringir uma nova procura a uma unidade ou caminho específico, use `--scan-root /caminho`. `--index-vault` mostra somente metadados de arquivos Markdown dentro do cofre escolhido.
 
 ### Navegador local controlado
 

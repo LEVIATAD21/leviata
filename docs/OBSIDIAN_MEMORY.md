@@ -8,11 +8,11 @@ O diário não armazena a cadeia de raciocínio privada do modelo. Ele guarda um
 
 ## Descoberta e seleção do cofre
 
-Na primeira execução com `--scan-vault`, o KAWA-AI procura diretórios `.obsidian` no diretório pessoal, em `~/Documents`, `~/Desktop`, `~/Obsidian`, `~/Notes`, `~/vault`, `~/kawa-ai`, `/mnt` e `/media/<usuário>`. A varredura procura somente a assinatura de um cofre e não lê o conteúdo das notas durante a descoberta.
+Na primeira execução, o KAWA-AI procura diretórios `.obsidian` na árvore local a partir de `/`. A varredura procura somente a assinatura de um cofre e não lê o conteúdo das notas durante a descoberta.
 
 O caminho selecionado é gravado em `~/.kawa-ai/config.json` como `obsidian_vault`. Em execuções futuras, o caminho salvo é sempre reutilizado. Se houver mais de um cofre candidato na primeira varredura, a ferramenta exibe os caminhos e pede que o proprietário selecione um com `--obsidian-vault`; ela não escolhe silenciosamente um cofre diferente.
 
-Uma varredura a partir de `/` é possível somente mediante `--scan-root /`. Diretórios dinâmicos e privilegiados, como `/proc`, `/sys`, `/dev`, `/run`, `/tmp`, `node_modules` e `.git`, são ignorados para evitar travamentos e exposição desnecessária de dados.
+Diretórios dinâmicos e privilegiados, como `/proc`, `/sys`, `/dev`, `/run`, `/tmp`, `node_modules` e `.git`, são ignorados para evitar travamentos e exposição desnecessária de dados. `--scan-root` continua disponível para restringir uma nova descoberta a uma pasta específica.
 
 ## Diário singleton
 
