@@ -1,8 +1,10 @@
 {
-  "provider": "openai",
-  "api_key": "SUA_CHAVE_AQUI",
-  "model": "gpt-4o",
-  "base_url": null,
+  "provider": "ollama",
+  "model": "qwen2.5:1.5b",
+  "base_url": "http://localhost:11434",
+  "policy_mode": "ask",
+  "workspace": "~/Projetos",
+  "knowledge_vault": "~/.kawa-ai/knowledge",
 
   "_comentario_provedores": "Troque 'provider' por: openai, anthropic, google, ollama, custom",
 
@@ -20,7 +22,7 @@
 
   "_exemplo_ollama_local": {
     "provider": "ollama",
-    "model": "llama3",
+    "model": "qwen2.5:1.5b",
     "base_url": "http://localhost:11434"
   },
 

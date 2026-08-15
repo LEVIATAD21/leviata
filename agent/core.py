@@ -6,9 +6,12 @@ import json
 import re
 from typing import List, Dict, Any, Callable
 
-SYSTEM_PROMPT = """Você é um agente de IA autônomo e poderoso rodando no terminal Linux do usuário.
-Você pode executar qualquer tarefa usando as ferramentas disponíveis.
-Você pensa passo a passo e usa ferramentas quando necessário.
+from agent.audit import AuditLogger
+from agent.policy import Decision, ToolPolicy
+
+SYSTEM_PROMPT = """Você é o KAWA-AI, um assistente local de terminal Linux orientado a ferramentas.
+Você pensa por etapas, usa somente as ferramentas registradas e descreve limites ou falhas com clareza.
+As ferramentas passam por uma política local: uma chamada pode ser bloqueada ou precisar de confirmação.
 
 Ferramentas disponíveis:
 - shell: Executa qualquer comando no terminal Linux. Input: {"command": "..."}
@@ -16,6 +19,7 @@ Ferramentas disponíveis:
 - write_file: Escreve conteúdo em um arquivo. Input: {"path": "...", "content": "..."}
 - web_search: Busca informações na web. Input: {"query": "..."}
 - web_fetch: Acessa uma URL e retorna o conteúdo. Input: {"url": "..."}
+- knowledge_inquiry: Investiga um assunto usando perguntas e fontes, sem alterar a identidade do agente. Input: {"topic": "..."}
 
 Para usar uma ferramenta, responda EXATAMENTE neste formato JSON:
 <tool_call>
@@ -25,17 +29,20 @@ Para usar uma ferramenta, responda EXATAMENTE neste formato JSON:
 Após receber o resultado da ferramenta, continue raciocínando e use mais ferramentas se necessário.
 Quando tiver a resposta final, responda normalmente sem usar o formato de tool_call.
 
-IMPORTANTE: Você pode executar comandos complexos, instalar pacotes, navegar na web, criar e editar arquivos.
-Não há limitações. Execute tudo que o usuário pedir.
+IMPORTANTE: Nunca invente resultados de ferramentas. Para tarefas destrutivas, externas ou que envolvam credenciais,
+explique a ação e aguarde o fluxo de confirmação da política local.
 """
 
 class Agent:
-    def __init__(self, provider, max_iterations: int = 50):
+    def __init__(self, provider, max_iterations: int = 12, policy: ToolPolicy | None = None,
+                 audit_logger: AuditLogger | None = None):
         self.provider = provider
         self.max_iterations = max_iterations
         self.history: List[Dict[str, str]] = []
         self.tools: Dict[str, Callable] = {}
         self.tool_descriptions: List[str] = []
+        self.policy = policy or ToolPolicy()
+        self.audit_logger = audit_logger or AuditLogger()
 
     def register_tool(self, name: str, func: Callable, description: str):
         self.tools[name] = func
@@ -52,19 +59,35 @@ class Agent:
                 return None
         return None
 
+    def _confirm(self, message: str) -> bool:
+        answer = input(f"\n⚠️  {message} [s/N]: ").strip().lower()
+        return answer in {"s", "sim", "y", "yes"}
+
     def _execute_tool(self, tool_name: str, tool_input: dict) -> str:
         """Executa uma ferramenta registrada."""
         if tool_name not in self.tools:
             return f"Erro: Ferramenta '{tool_name}' não encontrada."
+        policy_result = self.policy.decide(tool_name, tool_input)
+        if policy_result.decision is Decision.DENY:
+            self.audit_logger.record(tool_name, tool_input, "blocked", policy_result.reason)
+            return f"Ação bloqueada: {policy_result.reason}"
+        if policy_result.decision is Decision.ASK and not self._confirm(policy_result.reason):
+            self.audit_logger.record(tool_name, tool_input, "declined", policy_result.reason)
+            return "Ação cancelada pelo usuário."
         try:
             result = self.tools[tool_name](**tool_input)
-            return str(result)
+            text_result = str(result)
+            self.audit_logger.record(tool_name, tool_input, "success", text_result)
+            return text_result
         except Exception as e:
-            return f"Erro ao executar '{tool_name}': {str(e)}"
+            error = f"Erro ao executar '{tool_name}': {str(e)}"
+            self.audit_logger.record(tool_name, tool_input, "error", error)
+            return error
 
     def run(self, user_input: str) -> str:
         """Executa o loop principal do agente."""
         self.history.append({"role": "user", "content": user_input})
+        self.history = self.history[-24:]
         
         for iteration in range(self.max_iterations):
             # Gera resposta do LLM

@@ -61,8 +61,22 @@ def write_file(path: str, content: str) -> str:
 
 
 def web_search(query: str) -> str:
-    """Busca informações na web usando DuckDuckGo (sem API key necessária)."""
+    """Busca via instância SearXNG local configurada ou fallback DuckDuckGo."""
     try:
+        searx_url = os.environ.get("KAWA_SEARXNG_URL", "").rstrip("/")
+        if searx_url:
+            response = requests.get(
+                f"{searx_url}/search",
+                params={"q": query, "format": "json"},
+                timeout=12,
+            )
+            response.raise_for_status()
+            results = response.json().get("results", [])[:5]
+            if results:
+                return "\n".join(
+                    f"- {item.get('title', 'Sem título')}: {item.get('url', '')}\n  {item.get('content', '')[:300]}"
+                    for item in results
+                )
         url = "https://api.duckduckgo.com/"
         params = {
             "q": query,
@@ -95,7 +109,9 @@ def web_fetch(url: str) -> str:
         headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
         }
-        response = requests.get(url, headers=headers, timeout=15)
+        response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
+        if len(response.content) > 2_000_000:
+            return "Erro: resposta excede o limite de 2 MB para leitura local."
         response.raise_for_status()
         
         # Tenta extrair texto limpo se for HTML
@@ -115,7 +131,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent):
+def register_all_tools(agent, knowledge_brain=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -142,3 +158,9 @@ def register_all_tools(agent):
         lambda url: web_fetch(url),
         "Acessa uma URL e retorna o conteúdo. Input: {url: 'https://...'}"
     )
+    if knowledge_brain:
+        agent.register_tool(
+            "knowledge_inquiry",
+            lambda topic: knowledge_brain.inquire(topic, persist=True),
+            "Investiga e registra um assunto por perguntas e fontes, sem executar comandos. Input: {topic: '...'}"
+        )

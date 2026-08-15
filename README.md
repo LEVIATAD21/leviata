@@ -8,18 +8,19 @@
 
 > Agente de IA Autônomo para Terminal Linux — Desenvolvido por Kawã Silva
 
-Um agente de IA poderoso que roda diretamente no seu terminal Linux Mint, capaz de executar qualquer tarefa: instalar programas, criar arquivos, navegar na web, escrever código e muito mais. Suporta **qualquer LLM** via API.
+Um assistente local para terminal Linux Mint, capaz de ler e criar arquivos, pesquisar fontes públicas, ajudar com código e executar ferramentas configuradas pelo proprietário. Suporta provedores por API e modelos locais via Ollama.
 
 ---
 
 ## ✨ Funcionalidades
 
-- **Multi-LLM**: Troque o "cérebro" da IA quando quiser — OpenAI, Anthropic, Google Gemini, Ollama (local/grátis) ou qualquer API customizada
-- **Execução de Shell**: Executa qualquer comando Linux no seu PC
-- **Navegação Web**: Acessa URLs e busca informações na internet
-- **Leitura/Escrita de Arquivos**: Cria, lê e edita qualquer arquivo
-- **Loop Autônomo**: Planeja, executa ferramentas configuradas e itera conforme a tarefa e as permissões disponíveis
-- **Histórico configurável**: Gerencia o contexto localmente dentro dos limites do modelo e do provedor selecionado
+- **Multi-LLM**: Troque o "cérebro" da IA quando quiser — OpenAI, Anthropic, Google Gemini, Ollama local ou API compatível configurada pelo proprietário
+- **Execução de terminal com política local**: registra e confirma ações conforme o modo escolhido
+- **Pesquisa web configurável**: usa SearXNG local quando disponível, com fallback público
+- **Leitura e escrita de arquivos**: o modo `workspace` limita edições ao caminho definido
+- **Loop de ferramentas validado**: planeja, valida as chamadas antes de executá-las e mantém contexto curto
+- **Registro de auditoria**: salva ações em `~/.kawa-ai/logs/actions.jsonl`, com segredos redigidos
+- **Perfis leves para CPU**: configuração inicial voltada a `qwen2.5:1.5b`
 - **Interface bonita**: Terminal colorido e intuitivo
 
 ---
@@ -40,6 +41,17 @@ kawa
 ## ⚙️ Configuração Manual
 
 Crie o arquivo `~/.kawa-ai/config.json`:
+
+### Perfil local recomendado (Ollama)
+```json
+{
+  "provider": "ollama",
+  "model": "qwen2.5:1.5b",
+  "base_url": "http://localhost:11434",
+  "policy_mode": "ask",
+  "workspace": "~/Projetos"
+}
+```
 
 ### OpenAI (GPT-4o)
 ```json
@@ -96,11 +108,20 @@ ollama pull llama3
 ## 💬 Como Usar
 
 ```bash
-# Chat interativo
-kawa
+# Chat interativo local
+kawa --interactive
 
 # Tarefa direta
 kawa "crie um script Python que lista todos os arquivos .mp3 na pasta Downloads"
+
+# Permitir edições somente dentro de uma pasta específica
+kawa --policy workspace --workspace ~/Projetos "Revise este projeto"
+
+# Pesquisa que também cria uma nota Markdown no cofre local
+kawa --knowledge "como funciona RAG local" --knowledge-save
+
+# Roteia perguntas factuais para o cérebro de conhecimento e tarefas operacionais para o agente
+kawa --auto-route "como funciona RAG local?"
 
 # Usando um provedor específico
 kawa --provider anthropic --model claude-3-5-sonnet-20241022 "sua tarefa"
@@ -120,6 +141,14 @@ kawa --provider ollama --model llama3
 | `write_file` | Cria ou edita arquivos |
 | `web_search` | Busca informações na web (DuckDuckGo) |
 | `web_fetch` | Acessa uma URL e retorna o conteúdo |
+
+Os modos de política são `observe` (somente consulta), `ask` (padrão; confirma escrita e comandos) e `workspace` (permite edições no diretório definido e confirma ações de maior impacto).
+
+### Cérebro de conhecimento
+
+`--knowledge` ativa um módulo de consulta separado do assistente principal. Ele pergunta o que é, como funciona, quais são os limites e como confirmar o assunto; em seguida, entrega uma síntese baseada na pesquisa. Com `--knowledge-save`, o relatório é registrado como Markdown em `~/.kawa-ai/knowledge/` (ou na pasta definida por `--knowledge-vault`), sem mudar a identidade ou as permissões do KAWA-AI.
+
+Com `--auto-route`, perguntas explicativas são encaminhadas ao cérebro de conhecimento e salvas no cofre; solicitações operacionais continuam no agente principal e passam pela política local. O roteador é determinístico, não carrega outro modelo e pode ser desativado a qualquer momento.
 
 ---
 
