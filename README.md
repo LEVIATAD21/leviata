@@ -144,6 +144,12 @@ kawa --connection-set-token instagram --connection-scopes "instagram_basic"
 # Remove a conexão e o perfil isolado salvos localmente
 kawa --connection-remove instagram
 
+# Extrai um quadro a cada 5 segundos para investigar um vídeo, sem API externa
+kawa --extract-frames ~/Vídeos/exemplo.mp4 --frame-rate 0.2
+
+# Transcreve mídia localmente quando whisper.cpp e um modelo ggml estiverem instalados
+kawa --transcribe ~/Vídeos/exemplo.mp4 --whisper-model ~/.kawa-ai/models/ggml-base.bin
+
 # Usando um provedor específico
 kawa --provider anthropic --model claude-3-5-sonnet-20241022 "sua tarefa"
 
@@ -188,6 +194,12 @@ Se não houver navegador instalado, execute `PLAYWRIGHT_DOWNLOAD_CONNECTION_TIME
 Use `--browser-service nome-do-serviço` para manter uma sessão web em um perfil isolado próprio até que seja removida por `--connection-remove nome-do-serviço`. Para APIs, `--connection-set-token` solicita o token sem eco no terminal, tenta guardá-lo no cofre de credenciais do sistema e salva somente nome, tipo, escopos e datas em `~/.kawa-ai/connections.json`. A função não armazena tokens, cookies ou senhas no repositório nem nos logs.
 
 Serviços externos mantêm regras próprias de autorização e expiração. Instagram e Facebook, por exemplo, requerem login, permissões e APIs oficiais da Meta para ações de API; uma conexão local não contorna esses requisitos e pode precisar de renovação ou novo login. Consulte `docs/CONNECTIONS.md` antes de conectar uma conta.
+
+### Mídia local e provedores opcionais
+
+`--extract-frames` usa FFmpeg local para gerar uma amostra de quadros e um manifesto JSON dentro de `kawa-media/frames/` no diretório de trabalho. A taxa padrão é 0,2 fps, suficiente para investigação inicial sem criar milhares de imagens. `--transcribe` usa um executável local de `whisper.cpp` e um modelo ggml configurado em `KAWA_WHISPER_MODEL` ou informado por `--whisper-model`; nenhum áudio é enviado a terceiros nesse fluxo.
+
+Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotion são módulos opcionais. As integrações comerciais dependem de conta, chave ou infraestrutura autorizada pelo proprietário; não são substituídas por automação de navegador ou por credenciais inexistentes. Leia `docs/INTEGRATION_RESEARCH.md` antes de ativar um provedor.
 
 ---
 

@@ -64,6 +64,11 @@ class ToolPolicy:
                 return PolicyResult(Decision.DENY, "O modo observe bloqueia interações no navegador.")
             return PolicyResult(Decision.ASK, "Interação no navegador pode alterar estado ou enviar dados e requer confirmação.")
 
+        if tool_name in {"media_extract_frames", "media_transcribe"}:
+            if self.mode is PolicyMode.OBSERVE:
+                return PolicyResult(Decision.DENY, "O modo observe bloqueia processamento local de mídia.")
+            return PolicyResult(Decision.ASK, "Processamento de mídia pode consumir CPU e espaço em disco e requer confirmação.")
+
         if tool_name == "write_file":
             path = str(tool_input.get("path", ""))
             if not path or not self._inside_workspace(path):

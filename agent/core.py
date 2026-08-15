@@ -26,6 +26,8 @@ Ferramentas disponíveis:
 - browser_click: Clica em um seletor CSS, exigindo confirmação. Input: {"selector": "button.enviar"}
 - browser_type: Preenche um seletor CSS, exigindo confirmação. Input: {"selector": "input[name=q]", "text": "..."}
 - browser_close: Fecha a sessão local isolada do navegador. Input: {}
+- media_extract_frames: Extrai quadros de um vídeo para a área de trabalho após confirmação. Input: {"input_path": "...", "fps": 0.2}
+- media_transcribe: Transcreve mídia por whisper.cpp após confirmação. Input: {"input_path": "..."}
 
 Para usar uma ferramenta, responda EXATAMENTE neste formato JSON:
 <tool_call>

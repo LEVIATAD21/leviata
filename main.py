@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from agent.core import Agent
 from agent.connections import ConnectionError, ConnectionStore
+from agent.media import MediaError, MediaToolkit
 from agent.knowledge import KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import ToolPolicy
@@ -169,6 +170,11 @@ def main():
     parser.add_argument("--connection-set-token", type=str, help="Salva um token oficial no cofre de credenciais do sistema")
     parser.add_argument("--connection-scopes", type=str, help="Escopos separados por vírgula para documentação local")
     parser.add_argument("--connection-remove", type=str, help="Remove uma conexão local e o perfil isolado do serviço")
+    parser.add_argument("--media", action="store_true", help="Registra análise local de vídeo e transcrição por whisper.cpp")
+    parser.add_argument("--extract-frames", type=str, help="Extrai quadros de um vídeo e sai")
+    parser.add_argument("--frame-rate", type=float, default=0.2, help="Quadros por segundo na extração local (0,05 a 2)")
+    parser.add_argument("--transcribe", type=str, help="Transcreve mídia por whisper.cpp e sai")
+    parser.add_argument("--whisper-model", type=str, help="Caminho de modelo ggml para whisper.cpp")
     
     args = parser.parse_args()
     config = load_config()
@@ -198,7 +204,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -206,6 +212,14 @@ def main():
         sys.exit(0)
 
     try:
+        media = MediaToolkit(config.get("workspace", Path.cwd()))
+        if args.extract_frames:
+            print(media.extract_frames(args.extract_frames, args.frame_rate))
+            return
+        if args.transcribe:
+            print(media.transcribe(args.transcribe, args.whisper_model))
+            return
+
         memory = resolve_obsidian_memory(args, config)
         if args.init_obsidian:
             if memory:
@@ -257,7 +271,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser)
+            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media if args.media else None)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:

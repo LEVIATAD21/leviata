@@ -4,6 +4,7 @@ from pathlib import Path
 
 from agent.audit import AuditLogger
 from agent.connections import ConnectionStore
+from agent.media import MediaError, MediaToolkit
 from agent.core import SYSTEM_PROMPT
 from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
@@ -166,6 +167,14 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertTrue(store.remove("instagram"))
         self.assertFalse(profile.exists())
         self.assertNotIn((store.keyring_service, "instagram"), keyring.values)
+
+    def test_media_policy_requires_confirmation_and_tool_rejects_unsafe_rate(self):
+        policy = ToolPolicy("workspace", self.workspace)
+        self.assertEqual(policy.decide("media_extract_frames", {"input_path": "video.mp4"}).decision, Decision.ASK)
+        video = self.workspace / "video.mp4"
+        video.write_bytes(b"placeholder")
+        with self.assertRaises(MediaError):
+            MediaToolkit(self.workspace).extract_frames(str(video), fps=3)
 
 
 if __name__ == "__main__":

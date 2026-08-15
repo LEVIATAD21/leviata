@@ -131,7 +131,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None, media=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -189,4 +189,15 @@ def register_all_tools(agent, knowledge_brain=None, browser=None):
             "browser_close",
             lambda: browser.close(),
             "Fecha a sessão isolada do navegador. Input: {}"
+        )
+    if media:
+        agent.register_tool(
+            "media_extract_frames",
+            lambda input_path, fps=0.2: media.extract_frames(input_path, fps),
+            "Extrai 0,05 a 2 quadros por segundo para a pasta de trabalho após confirmação. Input: {input_path: 'video.mp4', fps: 0.2}"
+        )
+        agent.register_tool(
+            "media_transcribe",
+            lambda input_path: media.transcribe(input_path),
+            "Transcreve áudio ou vídeo por whisper.cpp após confirmação. Input: {input_path: 'audio.mp3'}"
         )
