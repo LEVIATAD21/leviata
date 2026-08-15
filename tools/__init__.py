@@ -131,7 +131,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None, media=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -200,4 +200,10 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None):
             "media_transcribe",
             lambda input_path: media.transcribe(input_path),
             "Transcreve áudio ou vídeo por whisper.cpp após confirmação. Input: {input_path: 'audio.mp3'}"
+        )
+    if quality:
+        agent.register_tool(
+            "quality_audit",
+            lambda target_path=".", tools=None: quality.audit(target_path, tools),
+            "Executa Ruff, Bandit e Semgrep de modo estático dentro do diretório de trabalho. Input: {target_path: '.', tools: ['ruff', 'bandit']}"
         )

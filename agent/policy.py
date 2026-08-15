@@ -72,6 +72,13 @@ class ToolPolicy:
                 return PolicyResult(Decision.ALLOW, "Processamento local de mídia permitido no modo proativo.")
             return PolicyResult(Decision.ASK, "Processamento de mídia pode consumir CPU e espaço em disco e requer confirmação.")
 
+        if tool_name == "quality_audit":
+            if self.mode is PolicyMode.OBSERVE:
+                return PolicyResult(Decision.DENY, "O modo observe bloqueia auditorias locais.")
+            if self.mode is PolicyMode.PROACTIVE:
+                return PolicyResult(Decision.ALLOW, "Auditoria estática local permitida no modo proativo.")
+            return PolicyResult(Decision.ASK, "A auditoria pode consumir CPU e requer confirmação neste modo.")
+
         if tool_name == "write_file":
             path = str(tool_input.get("path", ""))
             if not path or not self._inside_workspace(path):

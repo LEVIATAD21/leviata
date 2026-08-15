@@ -170,6 +170,9 @@ kawa --extract-frames ~/Vídeos/exemplo.mp4 --frame-rate 0.2
 # Transcreve mídia localmente quando whisper.cpp e um modelo ggml estiverem instalados
 kawa --transcribe ~/Vídeos/exemplo.mp4 --whisper-model ~/.kawa-ai/models/ggml-base.bin
 
+# Faz auditoria estática defensiva no projeto atual e gera relatório JSON local
+kawa --policy proactive --workspace ~/Projetos/meu-app --quality-audit . --quality-tools ruff,bandit
+
 # Usando um provedor específico
 kawa --provider anthropic --model claude-3-5-sonnet-20241022 "sua tarefa"
 
@@ -220,6 +223,10 @@ Serviços externos mantêm regras próprias de autorização e expiração. Inst
 `--extract-frames` usa FFmpeg local para gerar uma amostra de quadros e um manifesto JSON dentro de `kawa-media/frames/` no diretório de trabalho. A taxa padrão é 0,2 fps, suficiente para investigação inicial sem criar milhares de imagens. `--transcribe` usa um executável local de `whisper.cpp` e um modelo ggml configurado em `KAWA_WHISPER_MODEL` ou informado por `--whisper-model`; nenhum áudio é enviado a terceiros nesse fluxo.
 
 Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotion são módulos opcionais. As integrações comerciais dependem de conta, chave ou infraestrutura autorizada pelo proprietário; não são substituídas por automação de navegador ou por credenciais inexistentes. Leia `docs/INTEGRATION_RESEARCH.md` antes de ativar um provedor.
+
+### Qualidade, programação e segurança defensiva
+
+`--quality-audit` executa verificações estáticas dentro do diretório de trabalho e grava o relatório em `kawa-quality/`. Ruff verifica qualidade e formatação de Python; Bandit procura padrões comuns de segurança em Python; Semgrep executa regras estáticas para código. O módulo não explora sistemas, não realiza varredura de rede e não opera fora do diretório configurado. Instale apenas as ferramentas que quiser usar no ambiente local: `python3 -m pip install ruff bandit semgrep`.
 
 ### Pesquisa NVIDIA e memória Supabase
 

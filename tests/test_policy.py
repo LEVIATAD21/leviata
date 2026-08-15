@@ -5,6 +5,7 @@ from pathlib import Path
 from agent.audit import AuditLogger
 from agent.connections import ConnectionStore
 from agent.media import MediaError, MediaToolkit
+from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
 from agent.core import SYSTEM_PROMPT
@@ -39,6 +40,10 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(policy.decide("shell", {"command": "python3 -m unittest"}).decision, Decision.ALLOW)
         self.assertEqual(policy.decide("shell", {"command": "git push origin master"}).decision, Decision.ASK)
         self.assertEqual(policy.decide("browser_type", {"selector": "input", "text": "valor"}).decision, Decision.ASK)
+
+    def test_proactive_policy_allows_quality_audit(self):
+        policy = ToolPolicy("proactive", self.workspace)
+        self.assertEqual(policy.decide("quality_audit", {"target_path": "."}).decision, Decision.ALLOW)
 
     def test_high_impact_shell_requires_confirmation(self):
         policy = ToolPolicy("workspace", self.workspace)
@@ -184,6 +189,16 @@ class ToolPolicyTests(unittest.TestCase):
         video.write_bytes(b"placeholder")
         with self.assertRaises(MediaError):
             MediaToolkit(self.workspace).extract_frames(str(video), fps=3)
+
+    def test_quality_audit_stays_in_workspace_and_records_missing_tools(self):
+        workspace = self.workspace / "quality"
+        workspace.mkdir()
+        (workspace / "sample.py").write_text("print('ok')\n", encoding="utf-8")
+        toolkit = QualityToolkit(workspace, finder=lambda _: None)
+        result = toolkit.audit(".", ["ruff", "bandit"])
+        self.assertIn("ruff: not_installed", result)
+        self.assertIn("bandit: not_installed", result)
+        self.assertTrue((workspace / "kawa-quality").exists())
 
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:
