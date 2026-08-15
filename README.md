@@ -241,6 +241,8 @@ Use `--nvidia-research` para obter poucos pareceres sequenciais de modelos dispo
 
 `--supabase-store` é opcional e salva somente o relatório que você acabou de solicitar. Antes, configure o endpoint HTTPS e o token localmente. A tabela padrão é `kawa_knowledge` e deve aceitar as colunas `title`, `content`, `source` e `created_at`; as regras RLS permanecem responsabilidade do projeto Supabase. Conteúdo com padrões de chave, token ou senha é redigido antes do envio.
 
+O esquema reproduzível está em `docs/SUPABASE_SCHEMA.sql`. A tabela é criada com RLS ativo e sem políticas públicas: para este agente local, use uma credencial de servidor limitada ao projeto e guarde-a somente pelo prompt oculto de `--connection-set-token`; ela não deve ser colocada em arquivos `.env`, no Obsidian, no Git ou no chat.
+
 O KAWA-AI não promete tokens ilimitados: cada modelo e serviço mantém limites próprios. Para não perder profundidade, ele usa diário Obsidian contínuo, contexto recente limitado e pesquisa dividida em quadros curtos. Consulte `docs/CLAUDE_CODE_REFERENCE.md` para os padrões de experiência adotados como referência.
 
 ### Modo proativo
