@@ -11,6 +11,8 @@
   "browser_profile_mode": "isolated",
   "browser_executable": null,
   "connections_metadata": "~/.kawa-ai/connections.json",
+  "nvidia_max_models": 3,
+  "supabase_knowledge_table": "kawa_knowledge",
 
   "_comentario_provedores": "Troque 'provider' por: openai, anthropic, google, ollama, custom",
 

@@ -12,6 +12,7 @@
 | Nano Banana / Hedra | Hedra oferece esses modelos por API. | A API pública exige assinatura Hedra paga e saldo de créditos; não há integração gratuita sem conta/chave. |
 | Hailuo / MiniMax | API oficial para vídeo, imagem, voz e clonagem de voz. | Exige chave de API e plano/créditos; tarefas de vídeo são assíncronas. |
 | Photoroom | API oficial de remoção de fundo e edição. | Requer chave API; há planos distintos para remoção de fundo e edição. |
+| NVIDIA NIM | API compatível com OpenAI/Anthropic para descoberta de modelos e inferência sob uma chave autorizada. | Há endpoint de modelos; o KAWA-AI deve consultar poucos modelos por tarefa e consolidar respostas, nunca assumir capacidade ou contexto ilimitados. |
 
 ## Decisões de arquitetura
 
@@ -19,6 +20,7 @@
 2. Segredos não serão incluídos no repositório, parâmetros de linha de comando, diário Obsidian ou auditoria.
 3. Serviços web podem usar perfil isolado persistente para login manual, mas operações que alteram conteúdo seguem no modo `ask`.
 4. Funções locais serão priorizadas para análise de vídeo e transcrição. Geração, avatar, voz comercial e edição por provedores só serão chamadas por APIs oficialmente autorizadas.
+5. A consulta NVIDIA será sequencial e consultiva: cada modelo recebe uma pergunta delimitada, o resultado é resumido e somente o material aprovado pode ir para a memória externa. Isso evita multiplicar custo, latência e dados sensíveis.
 
 ## Referências
 
@@ -31,3 +33,5 @@
 [4] [MiniMax API Overview](https://platform.minimax.io/docs/api-reference/api-overview) documenta modelos de vídeo, voz, imagem e requisitos de chave.
 
 [5] [Photoroom API Introduction](https://docs.photoroom.com/) descreve recursos de edição, autenticação por chave e planos da API.
+
+[6] [NVIDIA NIM API Reference](https://docs.nvidia.com/nim/large-language-models/latest/api-reference.html) descreve endpoints compatíveis com OpenAI/Anthropic e descoberta de modelos.

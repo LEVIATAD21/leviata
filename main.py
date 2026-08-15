@@ -15,6 +15,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from agent.core import Agent
 from agent.connections import ConnectionError, ConnectionStore
 from agent.media import MediaError, MediaToolkit
+from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
+from agent.supabase_memory import SupabaseKnowledgeStore, SupabaseMemoryError
 from agent.knowledge import KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import ToolPolicy
@@ -135,6 +137,13 @@ def handle_connections(args):
                 return True
             print("Conexão removida." if store.remove(service) else "Nenhuma conexão local encontrada para esse serviço.")
             return True
+        if args.connection_set_endpoint:
+            if not args.connection_endpoint:
+                print("Informe --connection-endpoint https://... junto do serviço.")
+                return True
+            store.set_endpoint(args.connection_set_endpoint, args.connection_endpoint)
+            print(f"Endpoint registrado para: {store.normalize_service(args.connection_set_endpoint)}")
+            return True
     except ConnectionError as exc:
         print(f"Erro de conexão: {exc}")
         return True
@@ -170,6 +179,13 @@ def main():
     parser.add_argument("--connection-set-token", type=str, help="Salva um token oficial no cofre de credenciais do sistema")
     parser.add_argument("--connection-scopes", type=str, help="Escopos separados por vírgula para documentação local")
     parser.add_argument("--connection-remove", type=str, help="Remove uma conexão local e o perfil isolado do serviço")
+    parser.add_argument("--connection-set-endpoint", type=str, help="Salva endpoint HTTPS não secreto de uma conexão")
+    parser.add_argument("--connection-endpoint", type=str, help="Endpoint HTTPS vinculado a --connection-set-endpoint")
+    parser.add_argument("--nvidia-research", type=str, help="Consulta modelos NVIDIA em poucos quadros sequenciais e sai")
+    parser.add_argument("--nvidia-models", type=str, help="Lista opcional de IDs NVIDIA separados por vírgula")
+    parser.add_argument("--nvidia-max-models", type=int, default=3, help="Máximo de modelos NVIDIA por investigação (1 a 4)")
+    parser.add_argument("--supabase-store", action="store_true", help="Persiste explicitamente o resultado NVIDIA aprovado no Supabase")
+    parser.add_argument("--supabase-table", type=str, default="kawa_knowledge", help="Tabela Supabase para resultados aprovados")
     parser.add_argument("--media", action="store_true", help="Registra análise local de vídeo e transcrição por whisper.cpp")
     parser.add_argument("--extract-frames", type=str, help="Extrai quadros de um vídeo e sai")
     parser.add_argument("--frame-rate", type=float, default=0.2, help="Quadros por segundo na extração local (0,05 a 2)")
@@ -204,7 +220,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -218,6 +234,16 @@ def main():
             return
         if args.transcribe:
             print(media.transcribe(args.transcribe, args.whisper_model))
+            return
+        if args.nvidia_research:
+            requested = [model.strip() for model in (args.nvidia_models or "").split(",") if model.strip()]
+            report = NvidiaResearch().render(
+                NvidiaResearch().consult(args.nvidia_research, requested_models=requested or None, maximum=args.nvidia_max_models)
+            )
+            if args.supabase_store:
+                SupabaseKnowledgeStore().save_research(args.nvidia_research, report, args.supabase_table)
+                report += "\n\nResultado salvo no Supabase por solicitação explícita."
+            print(report)
             return
 
         memory = resolve_obsidian_memory(args, config)
@@ -290,6 +316,9 @@ def main():
                 result = agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")
 
+    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError) as e:
+        print(f"{Colors.FAIL}Erro de integração: {str(e)}{Colors.RESET}")
+        sys.exit(1)
     except Exception as e:
         print(f"{Colors.FAIL}Erro crítico: {str(e)}{Colors.RESET}")
         sys.exit(1)

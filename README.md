@@ -144,6 +144,20 @@ kawa --connection-set-token instagram --connection-scopes "instagram_basic"
 # Remove a conexão e o perfil isolado salvos localmente
 kawa --connection-remove instagram
 
+# Mantém uma sessão Google autorizada em um perfil isolado até que você a remova
+kawa --browser --browser-service google --policy ask --interactive
+
+# Salva o endpoint não secreto e o token de um projeto Supabase no cofre local
+kawa --connection-set-endpoint supabase --connection-endpoint "https://SEU-PROJETO.supabase.co"
+kawa --connection-set-token supabase --connection-scopes "knowledge_store"
+
+# Consulta até três modelos NVIDIA, em sequência, apenas para pesquisa
+kawa --connection-set-token nvidia --connection-scopes "research"
+kawa --nvidia-research "Compare alternativas para um agente local" --nvidia-max-models 3
+
+# Envia explicitamente somente esse relatório ao Supabase configurado
+kawa --nvidia-research "Investigue RAG local" --supabase-store
+
 # Extrai um quadro a cada 5 segundos para investigar um vídeo, sem API externa
 kawa --extract-frames ~/Vídeos/exemplo.mp4 --frame-rate 0.2
 
@@ -200,6 +214,14 @@ Serviços externos mantêm regras próprias de autorização e expiração. Inst
 `--extract-frames` usa FFmpeg local para gerar uma amostra de quadros e um manifesto JSON dentro de `kawa-media/frames/` no diretório de trabalho. A taxa padrão é 0,2 fps, suficiente para investigação inicial sem criar milhares de imagens. `--transcribe` usa um executável local de `whisper.cpp` e um modelo ggml configurado em `KAWA_WHISPER_MODEL` ou informado por `--whisper-model`; nenhum áudio é enviado a terceiros nesse fluxo.
 
 Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotion são módulos opcionais. As integrações comerciais dependem de conta, chave ou infraestrutura autorizada pelo proprietário; não são substituídas por automação de navegador ou por credenciais inexistentes. Leia `docs/INTEGRATION_RESEARCH.md` antes de ativar um provedor.
+
+### Pesquisa NVIDIA e memória Supabase
+
+Use `--nvidia-research` para obter poucos pareceres sequenciais de modelos disponíveis na sua conta NVIDIA. Cada resposta é entregue como um quadro de investigação, permitindo que o próximo modelo complemente ou critique o anterior. A chave é lida exclusivamente do cofre local criado por `--connection-set-token nvidia`; ela não aparece no comando, na auditoria, no Obsidian ou no repositório.
+
+`--supabase-store` é opcional e salva somente o relatório que você acabou de solicitar. Antes, configure o endpoint HTTPS e o token localmente. A tabela padrão é `kawa_knowledge` e deve aceitar as colunas `title`, `content`, `source` e `created_at`; as regras RLS permanecem responsabilidade do projeto Supabase. Conteúdo com padrões de chave, token ou senha é redigido antes do envio.
+
+O KAWA-AI não promete tokens ilimitados: cada modelo e serviço mantém limites próprios. Para não perder profundidade, ele usa diário Obsidian contínuo, contexto recente limitado e pesquisa dividida em quadros curtos. Consulte `docs/CLAUDE_CODE_REFERENCE.md` para os padrões de experiência adotados como referência.
 
 ---
 

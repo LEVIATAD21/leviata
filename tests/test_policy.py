@@ -5,6 +5,8 @@ from pathlib import Path
 from agent.audit import AuditLogger
 from agent.connections import ConnectionStore
 from agent.media import MediaError, MediaToolkit
+from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
+from agent.supabase_memory import SupabaseKnowledgeStore
 from agent.core import SYSTEM_PROMPT
 from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
@@ -175,6 +177,58 @@ class ToolPolicyTests(unittest.TestCase):
         video.write_bytes(b"placeholder")
         with self.assertRaises(MediaError):
             MediaToolkit(self.workspace).extract_frames(str(video), fps=3)
+
+    def test_connection_store_returns_token_without_writing_it_to_metadata(self):
+        class FakeKeyring:
+            def __init__(self):
+                self.values = {}
+            def set_password(self, service, name, token):
+                self.values[(service, name)] = token
+            def get_password(self, service, name):
+                return self.values.get((service, name))
+
+        store = ConnectionStore(self.workspace / "connections", credential_backend=FakeKeyring())
+        store.set_token("nvidia", "segredo")
+        self.assertEqual(store.get_token("nvidia"), "segredo")
+        self.assertNotIn("segredo", store.metadata_path.read_text(encoding="utf-8"))
+
+    def test_nvidia_research_queries_selected_models_in_sequence(self):
+        class FakeConnections:
+            def get_token(self, service):
+                return "token"
+        class Response:
+            def __init__(self, payload): self.payload = payload
+            def raise_for_status(self): return None
+            def json(self): return self.payload
+        class FakeHttp:
+            def __init__(self): self.calls = []
+            def get(self, *args, **kwargs):
+                return Response({"data": [{"id": "model-a-instruct"}, {"id": "model-b-reason"}]})
+            def post(self, *args, **kwargs):
+                self.calls.append(kwargs["json"])
+                return Response({"choices": [{"message": {"content": f"resposta-{len(self.calls)}"}}]})
+
+        http = FakeHttp()
+        frames = NvidiaResearch(FakeConnections(), http).consult("Como testar?", maximum=2)
+        self.assertEqual([frame.model for frame in frames], ["model-a-instruct", "model-b-reason"])
+        self.assertIn("resposta-1", http.calls[1]["messages"][0]["content"])
+
+    def test_supabase_payload_redacts_secret_like_text(self):
+        class FakeConnections:
+            def get_endpoint(self, service): return "https://example.supabase.co"
+            def get_token(self, service): return "token"
+        class Response:
+            def raise_for_status(self): return None
+        class FakeHttp:
+            def __init__(self): self.payload = None
+            def post(self, *args, **kwargs):
+                self.payload = kwargs["json"]
+                return Response()
+
+        http = FakeHttp()
+        SupabaseKnowledgeStore(FakeConnections(), http).save_research("Teste", "api_key=valor-secreto")
+        self.assertIn("[redigido]", http.payload["content"])
+        self.assertNotIn("valor-secreto", http.payload["content"])
 
 
 if __name__ == "__main__":

@@ -79,6 +79,35 @@ class ConnectionStore:
             for name, metadata in sorted(records.items())
         ]
 
+    def get_token(self, service: str) -> str | None:
+        """Recupera um segredo somente para uso interno; nunca o imprime ou registra."""
+        name = self.normalize_service(service)
+        try:
+            return self._keyring().get_password(self.keyring_service, name)
+        except Exception as exc:
+            raise ConnectionError("Não foi possível ler o cofre de credenciais do sistema.") from exc
+
+    def set_endpoint(self, service: str, endpoint: str) -> None:
+        name = self.normalize_service(service)
+        endpoint = endpoint.strip().rstrip("/")
+        if not endpoint.startswith("https://"):
+            raise ConnectionError("O endpoint deve usar HTTPS, por exemplo https://seu-projeto.supabase.co.")
+        data = self._read_metadata()
+        current = data["connections"].get(name, {})
+        data["connections"][name] = {
+            **current,
+            "endpoint": endpoint,
+            "updated_at": self._now(),
+        }
+        data["connections"][name].setdefault("created_at", self._now())
+        self._write_metadata(data)
+
+    def get_endpoint(self, service: str) -> str | None:
+        name = self.normalize_service(service)
+        metadata = self._read_metadata()["connections"].get(name, {})
+        endpoint = metadata.get("endpoint")
+        return endpoint if isinstance(endpoint, str) else None
+
     def set_token(self, service: str, token: str, scopes: list[str] | None = None) -> None:
         name = self.normalize_service(service)
         if not token.strip():
