@@ -158,6 +158,12 @@ kawa --nvidia-research "Compare alternativas para um agente local" --nvidia-max-
 # Envia explicitamente somente esse relatório ao Supabase configurado
 kawa --nvidia-research "Investigue RAG local" --supabase-store
 
+# Confere endpoint, token e leitura Supabase sem gravar dados
+kawa --supabase-check
+
+# Avança em tarefas locais comuns; ações externas e de alto impacto continuam confirmadas
+kawa --policy proactive --workspace ~/Projetos "Revise e corrija os testes deste projeto"
+
 # Extrai um quadro a cada 5 segundos para investigar um vídeo, sem API externa
 kawa --extract-frames ~/Vídeos/exemplo.mp4 --frame-rate 0.2
 
@@ -183,7 +189,7 @@ kawa --provider ollama --model llama3
 | `web_search` | Busca informações na web (DuckDuckGo) |
 | `web_fetch` | Acessa uma URL e retorna o conteúdo |
 
-Os modos de política são `observe` (somente consulta), `ask` (padrão; confirma escrita e comandos) e `workspace` (permite edições no diretório definido e confirma ações de maior impacto).
+Os modos de política são `observe` (somente consulta), `ask` (padrão; confirma escrita e comandos), `workspace` (permite edições no diretório definido e confirma ações de maior impacto) e `proactive` (avança em tarefas locais rotineiras, mas mantém confirmações para operações externas, irreversíveis ou sensíveis).
 
 ### Cérebro de conhecimento
 
@@ -222,6 +228,10 @@ Use `--nvidia-research` para obter poucos pareceres sequenciais de modelos dispo
 `--supabase-store` é opcional e salva somente o relatório que você acabou de solicitar. Antes, configure o endpoint HTTPS e o token localmente. A tabela padrão é `kawa_knowledge` e deve aceitar as colunas `title`, `content`, `source` e `created_at`; as regras RLS permanecem responsabilidade do projeto Supabase. Conteúdo com padrões de chave, token ou senha é redigido antes do envio.
 
 O KAWA-AI não promete tokens ilimitados: cada modelo e serviço mantém limites próprios. Para não perder profundidade, ele usa diário Obsidian contínuo, contexto recente limitado e pesquisa dividida em quadros curtos. Consulte `docs/CLAUDE_CODE_REFERENCE.md` para os padrões de experiência adotados como referência.
+
+### Modo proativo
+
+`--policy proactive` reduz interrupções durante tarefas locais: ele permite escrita dentro do diretório de trabalho, verificações e processamento de mídia sem confirmar cada etapa. O programa continua pedindo confirmação para comandos de alto impacto, cliques e preenchimentos no navegador, publicação em serviços externos e operações que possam remover conteúdo, expor dados ou modificar uma conta. O objetivo é executar com iniciativa, sem tornar as ações opacas ou irreversíveis.
 
 ---
 

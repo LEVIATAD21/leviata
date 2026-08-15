@@ -2,7 +2,7 @@
   "provider": "ollama",
   "model": "qwen2.5:1.5b",
   "base_url": "http://localhost:11434",
-  "policy_mode": "ask",
+  "policy_mode": "proactive",
   "workspace": "~/Projetos",
   "knowledge_vault": "~/.kawa-ai/knowledge",
   "obsidian_vault": null,
@@ -14,7 +14,7 @@
   "nvidia_max_models": 3,
   "supabase_knowledge_table": "kawa_knowledge",
 
-  "_comentario_provedores": "Troque 'provider' por: openai, anthropic, google, ollama, custom",
+  "_comentario_provedores": "Troque 'provider' por: openai, anthropic, google, ollama, custom. policy_mode pode ser observe, ask, workspace ou proactive.",
 
   "_exemplo_anthropic": {
     "provider": "anthropic",

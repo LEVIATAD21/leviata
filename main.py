@@ -158,7 +158,7 @@ def main():
     parser.add_argument("--model", type=str, help="Modelo")
     parser.add_argument("--api-key", type=str, help="Chave de API")
     parser.add_argument("--workspace", type=str, help="Diretório permitido para edições no modo workspace")
-    parser.add_argument("--policy", choices=["observe", "ask", "workspace"], help="Política de ferramentas")
+    parser.add_argument("--policy", choices=["observe", "ask", "workspace", "proactive"], help="Política de ferramentas")
     parser.add_argument("--max-iterations", type=int, default=12, help="Máximo de ciclos por tarefa")
     parser.add_argument("--interactive", action="store_true", help="Abre conversa local interativa")
     parser.add_argument("--knowledge", type=str, help="Consulta um assunto pelo módulo de conhecimento")
@@ -186,6 +186,7 @@ def main():
     parser.add_argument("--nvidia-max-models", type=int, default=3, help="Máximo de modelos NVIDIA por investigação (1 a 4)")
     parser.add_argument("--supabase-store", action="store_true", help="Persiste explicitamente o resultado NVIDIA aprovado no Supabase")
     parser.add_argument("--supabase-table", type=str, default="kawa_knowledge", help="Tabela Supabase para resultados aprovados")
+    parser.add_argument("--supabase-check", action="store_true", help="Verifica endpoint, token e leitura Supabase sem gravar dados")
     parser.add_argument("--media", action="store_true", help="Registra análise local de vídeo e transcrição por whisper.cpp")
     parser.add_argument("--extract-frames", type=str, help="Extrai quadros de um vídeo e sai")
     parser.add_argument("--frame-rate", type=float, default=0.2, help="Quadros por segundo na extração local (0,05 a 2)")
@@ -220,7 +221,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research and not args.supabase_check:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -234,6 +235,9 @@ def main():
             return
         if args.transcribe:
             print(media.transcribe(args.transcribe, args.whisper_model))
+            return
+        if args.supabase_check:
+            print(json.dumps(SupabaseKnowledgeStore().check(args.supabase_table), ensure_ascii=False, indent=2))
             return
         if args.nvidia_research:
             requested = [model.strip() for model in (args.nvidia_models or "").split(",") if model.strip()]

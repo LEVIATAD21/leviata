@@ -33,6 +33,13 @@ class ToolPolicyTests(unittest.TestCase):
         policy = ToolPolicy("ask", self.workspace)
         self.assertEqual(policy.decide("shell", {"command": "pwd"}).decision, Decision.ASK)
 
+    def test_proactive_mode_allows_routine_local_work_but_keeps_high_impact_confirmation(self):
+        policy = ToolPolicy("proactive", self.workspace)
+        self.assertEqual(policy.decide("write_file", {"path": "notes/plan.md"}).decision, Decision.ALLOW)
+        self.assertEqual(policy.decide("shell", {"command": "python3 -m unittest"}).decision, Decision.ALLOW)
+        self.assertEqual(policy.decide("shell", {"command": "git push origin master"}).decision, Decision.ASK)
+        self.assertEqual(policy.decide("browser_type", {"selector": "input", "text": "valor"}).decision, Decision.ASK)
+
     def test_high_impact_shell_requires_confirmation(self):
         policy = ToolPolicy("workspace", self.workspace)
         self.assertEqual(policy.decide("shell", {"command": "rm -rf build"}).decision, Decision.ASK)
@@ -229,6 +236,24 @@ class ToolPolicyTests(unittest.TestCase):
         SupabaseKnowledgeStore(FakeConnections(), http).save_research("Teste", "api_key=valor-secreto")
         self.assertIn("[redigido]", http.payload["content"])
         self.assertNotIn("valor-secreto", http.payload["content"])
+
+    def test_supabase_check_is_read_only(self):
+        class FakeConnections:
+            def get_endpoint(self, service): return "https://example.supabase.co"
+            def get_token(self, service): return "token"
+        class Response:
+            status_code = 200
+            def raise_for_status(self): return None
+        class FakeHttp:
+            def __init__(self): self.called = None
+            def get(self, *args, **kwargs):
+                self.called = {"args": args, "kwargs": kwargs}
+                return Response()
+
+        http = FakeHttp()
+        result = SupabaseKnowledgeStore(FakeConnections(), http).check()
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(http.called["kwargs"]["params"]["limit"], "0")
 
 
 if __name__ == "__main__":

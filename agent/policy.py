@@ -14,6 +14,7 @@ class PolicyMode(str, Enum):
     OBSERVE = "observe"
     ASK = "ask"
     WORKSPACE = "workspace"
+    PROACTIVE = "proactive"
 
 
 class Decision(str, Enum):
@@ -42,7 +43,7 @@ class ToolPolicy:
         try:
             self.mode = PolicyMode(mode)
         except ValueError as exc:
-            raise ValueError("Modo de política inválido: use observe, ask ou workspace.") from exc
+            raise ValueError("Modo de política inválido: use observe, ask, workspace ou proactive.") from exc
         self.workspace = Path(workspace or os.getcwd()).expanduser().resolve()
 
     def _inside_workspace(self, raw_path: str) -> bool:
@@ -67,6 +68,8 @@ class ToolPolicy:
         if tool_name in {"media_extract_frames", "media_transcribe"}:
             if self.mode is PolicyMode.OBSERVE:
                 return PolicyResult(Decision.DENY, "O modo observe bloqueia processamento local de mídia.")
+            if self.mode is PolicyMode.PROACTIVE:
+                return PolicyResult(Decision.ALLOW, "Processamento local de mídia permitido no modo proativo.")
             return PolicyResult(Decision.ASK, "Processamento de mídia pode consumir CPU e espaço em disco e requer confirmação.")
 
         if tool_name == "write_file":
@@ -89,6 +92,6 @@ class ToolPolicy:
                 return PolicyResult(Decision.ASK, "Comando de alto impacto requer confirmação.")
             if self.mode is PolicyMode.ASK:
                 return PolicyResult(Decision.ASK, "O modo ask confirma comandos de terminal.")
-            return PolicyResult(Decision.ALLOW, "Comando permitido no modo workspace.")
+            return PolicyResult(Decision.ALLOW, "Comando local rotineiro permitido no modo proativo/workspace.")
 
         return PolicyResult(Decision.DENY, f"Ferramenta não reconhecida pela política: {tool_name}.")

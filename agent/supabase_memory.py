@@ -55,3 +55,22 @@ class SupabaseKnowledgeStore:
             response.raise_for_status()
         except requests.RequestException as exc:
             raise SupabaseMemoryError("Não foi possível salvar o resultado no Supabase. Verifique tabela, RLS e permissões.") from exc
+
+    def check(self, table: str | None = None) -> dict[str, str | int]:
+        """Valida endpoint, token e leitura da tabela sem inserir, alterar ou excluir registros."""
+        target = (table or self.default_table).strip()
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,62}", target):
+            raise SupabaseMemoryError("Nome de tabela inválido.")
+        endpoint = self.connections.get_endpoint("supabase")
+        token = self.connections.get_token("supabase")
+        if not endpoint or not token:
+            raise SupabaseMemoryError("Supabase não configurado no cofre local.")
+        headers = {"apikey": token, "Authorization": f"Bearer {token}"}
+        try:
+            response = self.http.get(
+                f"{endpoint}/rest/v1/{target}", headers=headers, params={"select": "title", "limit": "0"}, timeout=30
+            )
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise SupabaseMemoryError("A verificação somente de leitura falhou. Confira URL, token, tabela e RLS.") from exc
+        return {"status": "ok", "endpoint": endpoint, "table": target, "http_status": int(response.status_code)}
