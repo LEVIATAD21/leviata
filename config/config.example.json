@@ -5,6 +5,10 @@
   "policy_mode": "ask",
   "workspace": "~/Projetos",
   "knowledge_vault": "~/.kawa-ai/knowledge",
+  "obsidian_vault": null,
+  "memory_context_chars": 6000,
+  "browser_profile_dir": "~/.kawa-ai/browser-profile",
+  "browser_profile_mode": "isolated",
 
   "_comentario_provedores": "Troque 'provider' por: openai, anthropic, google, ollama, custom",
 

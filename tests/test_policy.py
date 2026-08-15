@@ -5,6 +5,7 @@ from pathlib import Path
 from agent.audit import AuditLogger
 from agent.core import SYSTEM_PROMPT
 from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
+from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import Decision, ToolPolicy
 from agent.router import TaskRoute, TaskRouter
 
@@ -31,6 +32,12 @@ class ToolPolicyTests(unittest.TestCase):
         policy = ToolPolicy("workspace", self.workspace)
         self.assertEqual(policy.decide("shell", {"command": "rm -rf build"}).decision, Decision.ASK)
 
+    def test_browser_write_actions_require_confirmation(self):
+        policy = ToolPolicy("workspace", self.workspace)
+        self.assertEqual(policy.decide("browser_navigate", {"url": "https://example.org"}).decision, Decision.ALLOW)
+        self.assertEqual(policy.decide("browser_click", {"selector": "button"}).decision, Decision.ASK)
+        self.assertEqual(policy.decide("browser_type", {"selector": "input", "text": "valor"}).decision, Decision.ASK)
+
     def test_audit_redacts_secret_fields(self):
         log_file = self.workspace / "actions.jsonl"
         logger = AuditLogger(log_file)
@@ -38,6 +45,14 @@ class ToolPolicyTests(unittest.TestCase):
         content = log_file.read_text(encoding="utf-8")
         self.assertIn("[redigido]", content)
         self.assertNotIn("secret-value", content)
+
+    def test_audit_redacts_browser_text(self):
+        log_file = self.workspace / "actions.jsonl"
+        logger = AuditLogger(log_file)
+        logger.record("browser_type", {"selector": "input", "text": "dado-pessoal"}, "success", "ok")
+        content = log_file.read_text(encoding="utf-8")
+        self.assertIn("[redigido]", content)
+        self.assertNotIn("dado-pessoal", content)
 
     def test_knowledge_brain_only_uses_search_and_returns_questions(self):
         class StubProvider:
@@ -79,6 +94,43 @@ class ToolPolicyTests(unittest.TestCase):
         router = TaskRouter()
         self.assertEqual(router.route("Como funciona RAG local?"), TaskRoute.KNOWLEDGE)
         self.assertEqual(router.route("Crie um arquivo de notas"), TaskRoute.AGENT)
+
+    def test_obsidian_memory_creates_one_empty_diary_and_reuses_it(self):
+        vault = self.workspace / "vault"
+        (vault / ".obsidian").mkdir(parents=True)
+        memory = ObsidianMemory(vault)
+        first = memory.initialize()
+        second = memory.initialize()
+        self.assertEqual(first, second)
+        self.assertEqual(first.read_text(encoding="utf-8"), "")
+        self.assertEqual(list((vault / "KAWA-AI").glob("*Reasoning Diary*.md")), [first])
+
+    def test_obsidian_memory_appends_and_recovers_recent_context(self):
+        vault = self.workspace / "vault"
+        (vault / ".obsidian").mkdir(parents=True)
+        memory = ObsidianMemory(vault, context_chars=1_000)
+        memory.append_entry("Primeira tarefa", "Resultado A")
+        memory.append_entry("Segunda tarefa", "Resultado B")
+        diary = memory.diary_path
+        content = diary.read_text(encoding="utf-8")
+        self.assertIn("Primeira tarefa", content)
+        self.assertIn("Segunda tarefa", memory.recent_context())
+        self.assertTrue(list(memory.backup_dir.glob("reasoning-diary-*.md")))
+
+    def test_obsidian_memory_refuses_to_create_a_second_diary_without_manifest(self):
+        vault = self.workspace / "vault"
+        diary = vault / "KAWA-AI" / "Reasoning Diary.md"
+        (vault / ".obsidian").mkdir(parents=True)
+        diary.parent.mkdir()
+        diary.write_text("registro existente", encoding="utf-8")
+        with self.assertRaises(ObsidianMemoryError):
+            ObsidianMemory(vault).initialize()
+
+    def test_discovery_finds_only_obsidian_markers(self):
+        home = self.workspace / "home"
+        (home / "Documents" / "Cofre" / ".obsidian").mkdir(parents=True)
+        (home / "Documents" / "Cofre" / "nota.md").write_text("não precisa ser lida", encoding="utf-8")
+        self.assertEqual(ObsidianMemory.discover_vaults([home]), [(home / "Documents" / "Cofre").resolve()])
 
 
 if __name__ == "__main__":

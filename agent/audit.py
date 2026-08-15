@@ -24,10 +24,13 @@ class AuditLogger:
         return value
 
     def record(self, tool: str, arguments: dict[str, Any], status: str, detail: str) -> None:
+        safe_arguments = self._redact(arguments)
+        if tool.startswith("browser_") and isinstance(safe_arguments, dict) and "text" in safe_arguments:
+            safe_arguments["text"] = "[redigido]"
         event = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "tool": tool,
-            "arguments": self._redact(arguments),
+            "arguments": safe_arguments,
             "status": status,
             "detail": detail[:500],
         }

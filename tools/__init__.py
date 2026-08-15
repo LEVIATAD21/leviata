@@ -131,7 +131,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -163,4 +163,30 @@ def register_all_tools(agent, knowledge_brain=None):
             "knowledge_inquiry",
             lambda topic: knowledge_brain.inquire(topic, persist=True),
             "Investiga e registra um assunto por perguntas e fontes, sem executar comandos. Input: {topic: '...'}"
+        )
+    if browser:
+        agent.register_tool(
+            "browser_navigate",
+            lambda url: browser.navigate(url),
+            "Abre uma URL http(s) no Chromium local isolado. Input: {url: 'https://...'}"
+        )
+        agent.register_tool(
+            "browser_read",
+            lambda: browser.read(),
+            "Lê texto visível da página atual do Chromium isolado. Input: {}"
+        )
+        agent.register_tool(
+            "browser_click",
+            lambda selector: browser.click(selector),
+            "Clica em um seletor CSS após confirmação. Input: {selector: 'button'}"
+        )
+        agent.register_tool(
+            "browser_type",
+            lambda selector, text: browser.type(selector, text),
+            "Preenche um seletor CSS após confirmação; conteúdo digitado é redigido na auditoria. Input: {selector: 'input', text: '...'}"
+        )
+        agent.register_tool(
+            "browser_close",
+            lambda: browser.close(),
+            "Fecha a sessão isolada do navegador. Input: {}"
         )

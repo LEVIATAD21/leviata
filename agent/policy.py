@@ -56,8 +56,13 @@ class ToolPolicy:
             return False
 
     def decide(self, tool_name: str, tool_input: dict[str, Any]) -> PolicyResult:
-        if tool_name in {"web_search", "web_fetch", "read_file", "knowledge_inquiry"}:
+        if tool_name in {"web_search", "web_fetch", "read_file", "knowledge_inquiry", "browser_read", "browser_navigate", "browser_close"}:
             return PolicyResult(Decision.ALLOW, "Consulta ou leitura permitida.")
+
+        if tool_name in {"browser_click", "browser_type"}:
+            if self.mode is PolicyMode.OBSERVE:
+                return PolicyResult(Decision.DENY, "O modo observe bloqueia interações no navegador.")
+            return PolicyResult(Decision.ASK, "Interação no navegador pode alterar estado ou enviar dados e requer confirmação.")
 
         if tool_name == "write_file":
             path = str(tool_input.get("path", ""))

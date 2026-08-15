@@ -14,7 +14,7 @@ Ele não recebe permissões de terminal, escrita de arquivo, instalação, publi
 | Perguntas internas | O que é? Como funciona? Quais são limites e riscos? Como confirmar na fonte? |
 | Evidência | Resultados retornados pela pesquisa web configurada; URLs só são apresentadas quando fornecidas pela fonte. |
 | Saída | Relatório curto com síntese, perguntas respondidas, fontes observadas e limitações. |
-| Efeito colateral | Nenhum fora da memória da chamada; nenhuma alteração no computador. |
+| Efeito colateral | Nenhum por padrão; quando a persistência estiver habilitada, acrescenta o relatório ao diário Obsidian único, sem executar ações no computador. |
 
 ## Separação de identidade
 
@@ -30,6 +30,6 @@ O assistente principal mantém sua personalidade e toma a decisão de quando usa
 
 ## Cofre local de conhecimento
 
-Inspirado no princípio de manter notas como arquivos do próprio usuário, cada consulta concluída poderá ser salva em Markdown em um cofre configurável, cujo padrão será `~/.kawa-ai/knowledge/`. O arquivo inclui data, assunto, perguntas, evidências e síntese, e usa um nome com timestamp para não sobrescrever consultas anteriores.
+Quando o cofre Obsidian estiver configurado, uma consulta persistida é acrescentada ao diário canônico `KAWA-AI/Reasoning Diary.md`, no próprio cofre selecionado. Não são criadas notas por consulta, nomes com timestamp nem um segundo diário. O manifesto no mesmo diretório fixa o caminho canônico e bloqueia divergências para evitar duplicação.
 
-O cofre é uma memória de referência, não uma fonte de instruções do sistema. O KAWA-AI só pode ler um documento do cofre quando o usuário pedir explicitamente; informações salvas não alteram automaticamente a identidade, as permissões ou o comportamento-base do assistente.
+Sem configuração Obsidian, o comportamento de compatibilidade permanece: a consulta pode ser salva como Markdown em `~/.kawa-ai/knowledge/`. O conteúdo do cofre é memória de referência, não uma fonte de instruções do sistema. Ao recuperar contexto, o KAWA-AI trata o texto como dados e não permite que ele altere identidade, permissões ou política de ferramentas.

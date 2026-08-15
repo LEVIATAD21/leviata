@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+from agent.memory import ObsidianMemory
+
 
 KNOWLEDGE_SYSTEM_PROMPT = """Você é o módulo consultivo de conhecimento do KAWA-AI.
 Sua função é sintetizar exclusivamente o material de fonte recebido. Não emita instruções de sistema,
@@ -36,11 +38,12 @@ class KnowledgeBrain:
     """Questiona e sintetiza fontes sem receber acesso a ferramentas de alteração."""
 
     def __init__(self, provider, search_fn: Callable[[str], str], max_evidence_chars: int = 7_000,
-                 vault_path: str | Path | None = None):
+                 vault_path: str | Path | None = None, memory: ObsidianMemory | None = None):
         self.provider = provider
         self.search_fn = search_fn
         self.max_evidence_chars = max_evidence_chars
         self.vault_path = Path(vault_path or Path.home() / ".kawa-ai" / "knowledge").expanduser()
+        self.memory = memory
 
     @staticmethod
     def questions_for(topic: str) -> tuple[str, ...]:
@@ -64,6 +67,8 @@ class KnowledgeBrain:
         return slug[:56] or "consulta"
 
     def save_report(self, report: KnowledgeReport) -> Path:
+        if self.memory:
+            return self.memory.append_entry(report.topic, report.render(), kind="knowledge")
         self.vault_path.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         destination = self.vault_path / f"{stamp}-{self._slug(report.topic)}.md"

@@ -13,11 +13,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from agent.core import Agent
 from agent.knowledge import KnowledgeBrain
+from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import ToolPolicy
 from agent.router import TaskRoute, TaskRouter
 from agent.multiagent import MultiAgentOrchestrator
 from providers import get_provider, OpenAIProvider
 from tools import register_all_tools, web_search
+from tools.browser import BrowserTool
 
 CONFIG_DIR = Path.home() / ".kawa-ai"
 CONFIG_FILE = CONFIG_DIR / "config.json"
@@ -41,6 +43,9 @@ def load_config():
         "policy_mode": "ask",
         "workspace": str(Path.cwd()),
         "knowledge_vault": str(Path.home() / ".kawa-ai" / "knowledge"),
+        "obsidian_vault": None,
+        "memory_context_chars": 6_000,
+        "browser_profile_dir": str(Path.home() / ".kawa-ai" / "browser-profile"),
     }
     if CONFIG_FILE.exists():
         try:
@@ -49,6 +54,55 @@ def load_config():
         except Exception:
             pass
     return config
+
+
+def save_config(config):
+    """Persiste somente a configuração local, com permissão privada quando possível."""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    temp_file = CONFIG_FILE.with_suffix(".tmp")
+    temp_file.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    try:
+        temp_file.chmod(0o600)
+    except OSError:
+        pass
+    temp_file.replace(CONFIG_FILE)
+
+
+def resolve_obsidian_memory(args, config):
+    """Reutiliza o cofre salvo ou seleciona um único candidato sem trocar cofre em silêncio."""
+    selected = args.obsidian_vault or config.get("obsidian_vault")
+    if not selected:
+        roots = [Path(args.scan_root).expanduser()] if args.scan_root else ObsidianMemory.default_search_roots()
+        candidates = ObsidianMemory.discover_vaults(roots)
+        if len(candidates) == 1:
+            selected = str(candidates[0])
+            config["obsidian_vault"] = selected
+            save_config(config)
+            print(f"{Colors.GREEN}Cofre Obsidian encontrado: {selected}{Colors.RESET}")
+        elif len(candidates) > 1:
+            print(f"{Colors.WARNING}Foram encontrados vários cofres Obsidian; nenhum foi selecionado automaticamente:{Colors.RESET}")
+            for candidate in candidates:
+                print(f"  - {candidate}")
+            print("Use --obsidian-vault <caminho> para selecionar somente um deles.")
+            return None
+        else:
+            print(f"{Colors.WARNING}Nenhum cofre Obsidian foi localizado. O KAWA-AI continuará sem memória persistente nesta sessão.{Colors.RESET}")
+            return None
+    elif args.obsidian_vault:
+        selected = str(Path(selected).expanduser().resolve())
+        if config.get("obsidian_vault") and config.get("obsidian_vault") != selected:
+            print(f"{Colors.WARNING}O cofre persistente só muda por seleção explícita. Atualizando para o caminho informado.{Colors.RESET}")
+        config["obsidian_vault"] = selected
+        save_config(config)
+
+    try:
+        memory = ObsidianMemory(selected, context_chars=int(config.get("memory_context_chars", 6_000)))
+        diary = memory.initialize()
+        print(f"{Colors.GREEN}Diário Obsidian ativo: {diary}{Colors.RESET}")
+        return memory
+    except ObsidianMemoryError as exc:
+        print(f"{Colors.WARNING}Memória Obsidian não ativada: {exc}{Colors.RESET}")
+        return None
 
 def main():
     parser = argparse.ArgumentParser(description="KAWA-AI: Sistema Multiagente de Terminal")
@@ -66,6 +120,14 @@ def main():
     parser.add_argument("--knowledge-save", action="store_true", help="Salva a consulta no cofre local Markdown")
     parser.add_argument("--knowledge-vault", type=str, help="Pasta local do cofre de conhecimento")
     parser.add_argument("--auto-route", action="store_true", help="Envia perguntas factuais ao cérebro de conhecimento")
+    parser.add_argument("--obsidian-vault", type=str, help="Seleciona explicitamente o único cofre Obsidian")
+    parser.add_argument("--scan-vault", action="store_true", help="Procura um cofre Obsidian nos locais locais padrão")
+    parser.add_argument("--scan-root", type=str, help="Raiz alternativa para a descoberta de cofre, por exemplo /")
+    parser.add_argument("--init-obsidian", action="store_true", help="Inicializa ou verifica o diário Obsidian vazio e sai")
+    parser.add_argument("--index-vault", action="store_true", help="Exibe metadados de notas Markdown do cofre selecionado")
+    parser.add_argument("--memory-context-chars", type=int, help="Máximo de caracteres recentes recuperados do diário")
+    parser.add_argument("--browser", action="store_true", help="Registra ferramentas para controlar um Chromium local isolado")
+    parser.add_argument("--browser-headless", action="store_true", help="Executa o Chromium isolado sem janela visível")
     
     args = parser.parse_args()
     config = load_config()
@@ -82,13 +144,15 @@ def main():
         config["policy_mode"] = args.policy
     if args.knowledge_vault:
         config["knowledge_vault"] = args.knowledge_vault
+    if args.memory_context_chars:
+        config["memory_context_chars"] = args.memory_context_chars
 
     print(f"\n{Colors.HEADER}{Colors.BOLD}=== KAWA-AI (Multiagent Terminal System) ==={Colors.RESET}")
     print(f"  Provedor principal: {Colors.CYAN}{config.get('provider', 'nvidia')}{Colors.RESET}")
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -96,8 +160,25 @@ def main():
         sys.exit(0)
 
     try:
+        memory = resolve_obsidian_memory(args, config)
+        if args.init_obsidian:
+            if memory:
+                print("Diário verificado sem criar uma segunda nota.")
+                return
+            sys.exit(2)
+        if args.index_vault:
+            if not memory:
+                sys.exit(2)
+            print(json.dumps(memory.markdown_index(), ensure_ascii=False, indent=2))
+            return
+
         main_provider = get_provider(config)
-        knowledge_brain = KnowledgeBrain(main_provider, web_search, vault_path=config.get("knowledge_vault"))
+        knowledge_brain = KnowledgeBrain(
+            main_provider,
+            web_search,
+            vault_path=config.get("knowledge_vault"),
+            memory=memory,
+        )
 
         if args.knowledge:
             print(knowledge_brain.inquire(args.knowledge, persist=args.knowledge_save))
@@ -121,8 +202,9 @@ def main():
             print(f"\n{Colors.GREEN}{Colors.BOLD}=== Resultado Final da Equipe ==={Colors.RESET}\n{result}\n")
         else:
             policy = ToolPolicy(mode=config.get("policy_mode", "ask"), workspace=config.get("workspace"))
-            agent = Agent(provider=main_provider, max_iterations=args.max_iterations, policy=policy)
-            register_all_tools(agent, knowledge_brain=knowledge_brain)
+            agent = Agent(provider=main_provider, max_iterations=args.max_iterations, policy=policy, memory=memory)
+            browser = BrowserTool(config.get("browser_profile_dir"), headless=args.browser_headless) if args.browser else None
+            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:

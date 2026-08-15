@@ -123,6 +123,15 @@ kawa --knowledge "como funciona RAG local" --knowledge-save
 # Roteia perguntas factuais para o cérebro de conhecimento e tarefas operacionais para o agente
 kawa --auto-route "como funciona RAG local?"
 
+# Na primeira execução, procura um cofre Obsidian e inicializa o único diário vazio
+kawa --init-obsidian
+
+# Quando houver vários cofres, escolha exatamente um; nunca é criado outro automaticamente
+kawa --obsidian-vault "~/Documents/Meu Cofre" --init-obsidian
+
+# Disponibiliza um Chromium local com perfil isolado para o agente
+kawa --browser --policy ask "Abra https://example.com e leia a página"
+
 # Usando um provedor específico
 kawa --provider anthropic --model claude-3-5-sonnet-20241022 "sua tarefa"
 
@@ -149,6 +158,16 @@ Os modos de política são `observe` (somente consulta), `ask` (padrão; confirm
 `--knowledge` ativa um módulo de consulta separado do assistente principal. Ele pergunta o que é, como funciona, quais são os limites e como confirmar o assunto; em seguida, entrega uma síntese baseada na pesquisa. Com `--knowledge-save`, o relatório é registrado como Markdown em `~/.kawa-ai/knowledge/` (ou na pasta definida por `--knowledge-vault`), sem mudar a identidade ou as permissões do KAWA-AI.
 
 Com `--auto-route`, perguntas explicativas são encaminhadas ao cérebro de conhecimento e salvas no cofre; solicitações operacionais continuam no agente principal e passam pela política local. O roteador é determinístico, não carrega outro modelo e pode ser desativado a qualquer momento.
+
+### Cofre Obsidian persistente
+
+Na primeira execução, o KAWA-AI procura diretórios `.obsidian` nos locais locais mais comuns. Se localizar somente um, salva o caminho em `~/.kawa-ai/config.json` e cria o arquivo vazio e único `KAWA-AI/Reasoning Diary.md`. A partir daí, a memória é sempre acrescentada no mesmo diário e cópias de recuperação permanecem no mesmo cofre. Caso existam vários cofres, o programa pede o caminho explicitamente em vez de escolher ou criar outro.
+
+Para procurar uma unidade ou caminho específico, use `--scan-root /caminho`; uma varredura a partir de `/` deve ser uma escolha consciente porque pode ser demorada. `--index-vault` mostra somente metadados de arquivos Markdown dentro do cofre escolhido.
+
+### Navegador local controlado
+
+O parâmetro `--browser` habilita um Chromium local com perfil isolado em `~/.kawa-ai/browser-profile`; ele não usa automaticamente os cookies ou sessões do navegador principal. Depois de instalar as dependências do projeto, execute uma vez `python3 -m playwright install chromium`. Abertura e leitura de páginas são separadas de cliques e preenchimento: no modo padrão `ask`, qualquer clique ou texto digitado exige confirmação e seus dados são redigidos do registro de auditoria. Não habilite o modo sem janela em fluxos que precisem de login manual ou revisão visual.
 
 ---
 
