@@ -46,6 +46,16 @@ class ToolPolicy:
             raise ValueError("Modo de política inválido: use observe, ask, workspace ou proactive.") from exc
         self.workspace = Path(workspace or os.getcwd()).expanduser().resolve()
 
+    _sensitive_names = re.compile(
+        r"(^|/)(\.bashrc|\.bash_profile|\.profile|\.zshrc|\.ssh(/|$)|authorized_keys|"
+        r"crontab|sudoers|shadow|passwd|hosts|fstab|\.[\w-]+rc|env|\.env|\.kawa-ai(/|$))",
+        re.IGNORECASE,
+    )
+
+    def _sensitive_path(self, raw_path: str) -> bool:
+        candidate = Path(raw_path).expanduser()
+        return bool(self._sensitive_names.search(str(candidate)))
+
     def _inside_workspace(self, raw_path: str) -> bool:
         candidate = Path(raw_path).expanduser()
         if not candidate.is_absolute():
@@ -90,6 +100,8 @@ class ToolPolicy:
             path = str(tool_input.get("path", ""))
             if not path or not self._inside_workspace(path):
                 return PolicyResult(Decision.DENY, "A escrita precisa permanecer dentro do diretório de trabalho.")
+            if self._sensitive_path(path):
+                return PolicyResult(Decision.DENY, "Arquivos de sistema ou credenciais não podem ser alterados (ex.: .bashrc, .ssh, /etc, crontab).")
             if self.mode is PolicyMode.OBSERVE:
                 return PolicyResult(Decision.DENY, "O modo observe bloqueia escrita de arquivos.")
             if self.mode is PolicyMode.ASK:

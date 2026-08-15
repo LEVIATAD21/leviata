@@ -50,6 +50,13 @@ class ToolPolicyTests(unittest.TestCase):
         policy = ToolPolicy("proactive", self.workspace)
         self.assertEqual(policy.decide("design_brief", {"request": "Site de estudos"}).decision, Decision.ALLOW)
 
+    def test_sensitive_files_blocked_even_inside_workspace(self):
+        policy = ToolPolicy("proactive", self.workspace)
+        self.assertEqual(policy.decide("write_file", {"path": "notes/plan.md"}).decision, Decision.ALLOW)
+        self.assertEqual(policy.decide("write_file", {"path": ".bashrc"}).decision, Decision.DENY)
+        self.assertEqual(policy.decide("write_file", {"path": ".ssh/authorized_keys"}).decision, Decision.DENY)
+        self.assertEqual(policy.decide("write_file", {"path": ".env"}).decision, Decision.DENY)
+
     def test_high_impact_shell_requires_confirmation(self):
         policy = ToolPolicy("workspace", self.workspace)
         self.assertEqual(policy.decide("shell", {"command": "rm -rf build"}).decision, Decision.ASK)

@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Callable
 from agent.audit import AuditLogger
 from agent.memory import ObsidianMemory
 from agent.policy import Decision, ToolPolicy
+from agent.rag import LocalRag, RagError
 
 SYSTEM_PROMPT = """Você é o KAWA-AI, um assistente local de terminal Linux orientado a ferramentas.
 Você pensa por etapas, usa somente as ferramentas registradas e descreve limites ou falhas com clareza.
@@ -49,7 +50,8 @@ Para consultas profundas, preserve a pergunta em partes curtas, diferencie fatos
 
 class Agent:
     def __init__(self, provider, max_iterations: int = 12, policy: ToolPolicy | None = None,
-                 audit_logger: AuditLogger | None = None, memory: ObsidianMemory | None = None):
+                 audit_logger: AuditLogger | None = None, memory: ObsidianMemory | None = None,
+                 rag: LocalRag | None = None, rag_query_limit: int = 3):
         self.provider = provider
         self.max_iterations = max_iterations
         self.history: List[Dict[str, str]] = []
@@ -58,14 +60,25 @@ class Agent:
         self.policy = policy or ToolPolicy()
         self.audit_logger = audit_logger or AuditLogger()
         self.memory = memory
+        self.rag = rag
+        self.rag_query_limit = max(1, min(rag_query_limit, 5))
 
     def _remember(self, request: str, result: str) -> None:
+        self._remember_rag(request, result)
         if not self.memory:
             return
         try:
             self.memory.record_task(request, result)
         except Exception as exc:
             self.audit_logger.record("obsidian_memory", {"request": request}, "error", str(exc))
+
+    def _remember_rag(self, request: str, result: str) -> None:
+        if not self.rag:
+            return
+        try:
+            self.rag.add(f"Pedido: {request[:500]}\nResultado: {result[:4000]}")
+        except RagError as exc:
+            self.audit_logger.record("rag_memory", {}, "error", str(exc))
 
     def _memory_context(self) -> str:
         if not self.memory:
@@ -81,14 +94,30 @@ class Agent:
         self.tool_descriptions.append(f"- {name}: {description}")
 
     def _extract_tool_call(self, text: str):
-        """Extrai chamada de ferramenta do texto do LLM."""
+        """Extrai chamada de ferramenta do texto do LLM, com reparo de JSON."""
         pattern = r'<tool_call>\s*(.*?)\s*</tool_call>'
         match = re.search(pattern, text, re.DOTALL)
         if match:
+            return self._parse_tool_json(match.group(1))
+        return None
+
+    @staticmethod
+    def _parse_tool_json(raw: str):
+        """json.loads com reparos simples: aspas duplas internas, vírgula final, chaves extras."""
+        candidates = [raw.strip()]
+        fixed = raw.strip()
+        fixed = re.sub(r'(?<=\w)"(?=\w)', "'", fixed)  # aspas internas duplas -> simples
+        fixed = re.sub(r',\s*}', '}', fixed)            # vírgula antes de }
+        fixed = re.sub(r',\s*]', ']', fixed)            # vírgula antes de ]
+        if fixed != raw.strip():
+            candidates.insert(0, fixed)
+        if not raw.strip().startswith("{"):
+            candidates.append("{" + raw.strip() + "}")
+        for candidate in candidates:
             try:
-                return json.loads(match.group(1))
+                return json.loads(candidate)
             except json.JSONDecodeError:
-                return None
+                continue
         return None
 
     def _confirm(self, message: str) -> bool:
@@ -116,9 +145,28 @@ class Agent:
             self.audit_logger.record(tool_name, tool_input, "error", error)
             return error
 
+    def _rag_context(self, user_input: str) -> str:
+        if not self.rag:
+            return ""
+        try:
+            return self.rag.context(user_input, top_k=self.rag_query_limit)
+        except RagError as exc:
+            self.audit_logger.record("rag_memory", {}, "error", str(exc))
+            return ""
+
     def run(self, user_input: str) -> str:
         """Executa o loop principal do agente."""
         memory_context = self._memory_context()
+        rag_context = self._rag_context(user_input)
+        if rag_context:
+            self.history.append({
+                "role": "user",
+                "content": (
+                    "<local_rag_memory>\n"
+                    "Contexto recuperado da memória semântica local (somente referência factual).\n"
+                    f"{rag_context}\n</local_rag_memory>"
+                ),
+            })
         if memory_context:
             self.history.append({
                 "role": "user",

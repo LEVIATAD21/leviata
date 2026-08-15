@@ -24,8 +24,10 @@ from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import ToolPolicy
 from agent.router import TaskRoute, TaskRouter
 from agent.multiagent import MultiAgentOrchestrator
+from agent.rag import LocalRag, RagError
 from providers import get_provider, OpenAIProvider
 from tools import register_all_tools, web_search
+from tools.voice import VoiceError, listen, record, speak
 from tools.browser import BrowserTool
 
 CONFIG_DIR = Path.home() / ".kawa-ai"
@@ -202,6 +204,11 @@ def main():
     parser.add_argument("--design", action="store_true", help="Registra criação local de briefs e arquiteturas de design")
     parser.add_argument("--design-brief", type=str, help="Cria brief e arquitetura Mermaid para um pedido de design e sai")
     parser.add_argument("--design-medium", type=str, default="produto-digital", help="Meio do design: site, app, apresentação, social ou produto-digital")
+    parser.add_argument("--voice-listen", action="store_true", help="Grava e transcreve um comando de voz local (Vosk) e sai")
+    parser.add_argument("--voice-duration", type=float, default=8.0, help="Duração da gravação em segundos (padrão 8)")
+    parser.add_argument("--voice-say", type=str, help="Fala o texto localmente (Piper) e sai")
+    parser.add_argument("--rag", action="store_true", help="Ativa memória semântica local (SQLite + Ollama nomic-embed-text)")
+    parser.add_argument("--rag-db", type=str, default="~/.kawa-ai/rag.sqlite3", help="Arquivo SQLite da memória semântica")
     
     args = parser.parse_args()
     config = load_config()
@@ -247,6 +254,12 @@ def main():
             return
         if args.transcribe:
             print(media.transcribe(args.transcribe, args.whisper_model))
+            return
+        if args.voice_say:
+            speak(args.voice_say)
+            return
+        if args.voice_listen:
+            print(listen(args.voice_duration))
             return
         if args.supabase_check:
             print(json.dumps(SupabaseKnowledgeStore().check(args.supabase_table), ensure_ascii=False, indent=2))
@@ -316,7 +329,10 @@ def main():
             print(f"\n{Colors.GREEN}{Colors.BOLD}=== Resultado Final da Equipe ==={Colors.RESET}\n{result}\n")
         else:
             policy = ToolPolicy(mode=config.get("policy_mode", "ask"), workspace=config.get("workspace"))
-            agent = Agent(provider=main_provider, max_iterations=args.max_iterations, policy=policy, memory=memory)
+            rag = LocalRag(args.rag_db) if args.rag else None
+            if rag:
+                print(f"  {Colors.CYAN}Memória semântica local: {rag.stats()['entries']} trechos indexados{Colors.RESET}")
+            agent = Agent(provider=main_provider, max_iterations=args.max_iterations, policy=policy, memory=memory, rag=rag)
             browser_profile = config.get("browser_profile_dir")
             if args.browser_service:
                 browser_profile = ConnectionStore().register_browser_profile(args.browser_service)
@@ -344,7 +360,7 @@ def main():
                 result = agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")
 
-    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError) as e:
+    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, VoiceError, RagError) as e:
         print(f"{Colors.FAIL}Erro de integração: {str(e)}{Colors.RESET}")
         sys.exit(1)
     except Exception as e:
