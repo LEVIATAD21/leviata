@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 from agent.audit import AuditLogger
+from agent.connections import ConnectionStore
 from agent.core import SYSTEM_PROMPT
 from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
@@ -142,6 +143,29 @@ class ToolPolicyTests(unittest.TestCase):
         executable.chmod(0o755)
         browser = BrowserTool(self.workspace / "profile", executable_path=executable)
         self.assertEqual(browser.executable_path, str(executable.resolve()))
+
+    def test_connection_store_keeps_token_out_of_metadata_and_removes_profile(self):
+        class FakeKeyring:
+            def __init__(self):
+                self.values = {}
+
+            def set_password(self, service, name, token):
+                self.values[(service, name)] = token
+
+            def delete_password(self, service, name):
+                self.values.pop((service, name), None)
+
+        keyring = FakeKeyring()
+        store = ConnectionStore(self.workspace / "connections", credential_backend=keyring)
+        store.set_token("Instagram", "token-secreto", ["instagram_basic"])
+        profile = store.register_browser_profile("Instagram")
+        metadata = store.metadata_path.read_text(encoding="utf-8")
+        self.assertNotIn("token-secreto", metadata)
+        self.assertIn("instagram", metadata)
+        self.assertTrue(profile.exists())
+        self.assertTrue(store.remove("instagram"))
+        self.assertFalse(profile.exists())
+        self.assertNotIn((store.keyring_service, "instagram"), keyring.values)
 
 
 if __name__ == "__main__":

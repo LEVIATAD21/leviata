@@ -10,6 +10,7 @@
   "browser_profile_dir": "~/.kawa-ai/browser-profile",
   "browser_profile_mode": "isolated",
   "browser_executable": null,
+  "connections_metadata": "~/.kawa-ai/connections.json",
 
   "_comentario_provedores": "Troque 'provider' por: openai, anthropic, google, ollama, custom",
 

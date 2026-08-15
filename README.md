@@ -132,6 +132,18 @@ kawa --obsidian-vault "~/Documents/Meu Cofre" --init-obsidian
 # Disponibiliza um Chromium local com perfil isolado para o agente
 kawa --browser --policy ask "Abra https://example.com e leia a página"
 
+# Cria um perfil de navegador persistente, isolado e exclusivo para um serviço
+kawa --browser --browser-service instagram --policy ask "Abra https://instagram.com"
+
+# Lista metadados de conexões; tokens e cookies nunca são exibidos
+kawa --connections
+
+# Salva um token já obtido no canal oficial, sem colocá-lo na linha de comando
+kawa --connection-set-token instagram --connection-scopes "instagram_basic"
+
+# Remove a conexão e o perfil isolado salvos localmente
+kawa --connection-remove instagram
+
 # Usando um provedor específico
 kawa --provider anthropic --model claude-3-5-sonnet-20241022 "sua tarefa"
 
@@ -170,6 +182,12 @@ Para restringir uma nova procura a uma unidade ou caminho específico, use `--sc
 O parâmetro `--browser` habilita um Chromium local com perfil isolado em `~/.kawa-ai/browser-profile`; ele não usa automaticamente os cookies ou sessões do navegador principal. O KAWA-AI procura primeiro `google-chrome`, `chromium` ou `chromium-browser` já instalados no Linux Mint, evitando o download do Playwright quando possível. Se o navegador estiver em outro caminho, use `--browser-executable /caminho/do/executavel` ou a variável `KAWA_BROWSER_EXECUTABLE`.
 
 Se não houver navegador instalado, execute `PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=120000 python3 -m playwright install chromium` para aumentar o tempo de conexão do download. Abertura e leitura de páginas são separadas de cliques e preenchimento: no modo padrão `ask`, qualquer clique ou texto digitado exige confirmação e seus dados são redigidos do registro de auditoria. Não habilite o modo sem janela em fluxos que precisem de login manual ou revisão visual.
+
+### Conexões persistentes
+
+Use `--browser-service nome-do-serviço` para manter uma sessão web em um perfil isolado próprio até que seja removida por `--connection-remove nome-do-serviço`. Para APIs, `--connection-set-token` solicita o token sem eco no terminal, tenta guardá-lo no cofre de credenciais do sistema e salva somente nome, tipo, escopos e datas em `~/.kawa-ai/connections.json`. A função não armazena tokens, cookies ou senhas no repositório nem nos logs.
+
+Serviços externos mantêm regras próprias de autorização e expiração. Instagram e Facebook, por exemplo, requerem login, permissões e APIs oficiais da Meta para ações de API; uma conexão local não contorna esses requisitos e pode precisar de renovação ou novo login. Consulte `docs/CONNECTIONS.md` antes de conectar uma conta.
 
 ---
 

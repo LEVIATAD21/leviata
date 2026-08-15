@@ -7,11 +7,13 @@ import os
 import sys
 import json
 import argparse
+import getpass
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 from agent.core import Agent
+from agent.connections import ConnectionError, ConnectionStore
 from agent.knowledge import KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import ToolPolicy
@@ -105,6 +107,38 @@ def resolve_obsidian_memory(args, config):
         print(f"{Colors.WARNING}Memória Obsidian não ativada: {exc}{Colors.RESET}")
         return None
 
+
+def handle_connections(args):
+    """Processa as conexões antes de iniciar provedores, modelos ou tarefas."""
+    store = ConnectionStore()
+    try:
+        if args.connections:
+            records = store.list_connections()
+            if not records:
+                print("Nenhuma conexão local registrada.")
+                return True
+            print(json.dumps(records, ensure_ascii=False, indent=2))
+            return True
+        if args.connection_set_token:
+            service = args.connection_set_token
+            token = getpass.getpass(f"Token oficial de {service} (não será exibido): ")
+            scopes = [scope.strip() for scope in (args.connection_scopes or "").split(",") if scope.strip()]
+            store.set_token(service, token, scopes)
+            print(f"Conexão por token registrada para: {store.normalize_service(service)}")
+            return True
+        if args.connection_remove:
+            service = store.normalize_service(args.connection_remove)
+            answer = input(f"Remover localmente token e perfil de navegador de '{service}'? [s/N]: ").strip().lower()
+            if answer not in {"s", "sim", "y", "yes"}:
+                print("Remoção cancelada.")
+                return True
+            print("Conexão removida." if store.remove(service) else "Nenhuma conexão local encontrada para esse serviço.")
+            return True
+    except ConnectionError as exc:
+        print(f"Erro de conexão: {exc}")
+        return True
+    return False
+
 def main():
     parser = argparse.ArgumentParser(description="KAWA-AI: Sistema Multiagente de Terminal")
     parser.add_argument("task", nargs="*", help="Tarefa a ser executada")
@@ -130,9 +164,17 @@ def main():
     parser.add_argument("--browser", action="store_true", help="Registra ferramentas para controlar um Chromium local isolado")
     parser.add_argument("--browser-headless", action="store_true", help="Executa o Chromium isolado sem janela visível")
     parser.add_argument("--browser-executable", type=str, help="Caminho explícito para Chromium ou Chrome já instalados")
+    parser.add_argument("--browser-service", type=str, help="Nome do serviço cujo perfil isolado será preservado")
+    parser.add_argument("--connections", action="store_true", help="Lista conexões locais sem mostrar tokens ou cookies")
+    parser.add_argument("--connection-set-token", type=str, help="Salva um token oficial no cofre de credenciais do sistema")
+    parser.add_argument("--connection-scopes", type=str, help="Escopos separados por vírgula para documentação local")
+    parser.add_argument("--connection-remove", type=str, help="Remove uma conexão local e o perfil isolado do serviço")
     
     args = parser.parse_args()
     config = load_config()
+
+    if handle_connections(args):
+        return
     
     if args.provider:
         config["provider"] = args.provider
@@ -207,8 +249,11 @@ def main():
         else:
             policy = ToolPolicy(mode=config.get("policy_mode", "ask"), workspace=config.get("workspace"))
             agent = Agent(provider=main_provider, max_iterations=args.max_iterations, policy=policy, memory=memory)
+            browser_profile = config.get("browser_profile_dir")
+            if args.browser_service:
+                browser_profile = ConnectionStore().register_browser_profile(args.browser_service)
             browser = BrowserTool(
-                config.get("browser_profile_dir"),
+                browser_profile,
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
