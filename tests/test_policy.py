@@ -8,6 +8,7 @@ from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import Decision, ToolPolicy
 from agent.router import TaskRoute, TaskRouter
+from tools.browser import BrowserTool
 
 
 class ToolPolicyTests(unittest.TestCase):
@@ -134,6 +135,13 @@ class ToolPolicyTests(unittest.TestCase):
 
     def test_default_discovery_starts_from_root(self):
         self.assertEqual(ObsidianMemory.default_search_roots(), [Path("/")])
+
+    def test_browser_prefers_explicit_local_executable(self):
+        executable = self.workspace / "chromium"
+        executable.write_text("#!/bin/sh\n", encoding="utf-8")
+        executable.chmod(0o755)
+        browser = BrowserTool(self.workspace / "profile", executable_path=executable)
+        self.assertEqual(browser.executable_path, str(executable.resolve()))
 
 
 if __name__ == "__main__":

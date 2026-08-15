@@ -2,18 +2,37 @@
 
 from __future__ import annotations
 
+import os
+import shutil
 from pathlib import Path
 
 
 class BrowserTool:
     """Controla um Chromium local somente quando a ferramenta é solicitada pelo agente."""
 
-    def __init__(self, profile_dir: str | Path, headless: bool = False):
+    def __init__(self, profile_dir: str | Path, headless: bool = False, executable_path: str | Path | None = None):
         self.profile_dir = Path(profile_dir).expanduser()
         self.headless = headless
+        self.executable_path = self._find_system_browser(executable_path)
         self._playwright = None
         self._context = None
         self._page = None
+
+    @staticmethod
+    def _find_system_browser(configured_path: str | Path | None = None) -> str | None:
+        """Prefere um executável local para evitar baixar o navegador empacotado."""
+        candidates = [configured_path, os.environ.get("KAWA_BROWSER_EXECUTABLE")]
+        candidates.extend(["google-chrome-stable", "google-chrome", "chromium", "chromium-browser"])
+        for candidate in candidates:
+            if not candidate:
+                continue
+            candidate_path = Path(candidate).expanduser()
+            if candidate_path.is_file() and os.access(candidate_path, os.X_OK):
+                return str(candidate_path.resolve())
+            resolved = shutil.which(str(candidate))
+            if resolved:
+                return resolved
+        return None
 
     def _ensure_page(self):
         if self._page:
@@ -27,11 +46,21 @@ class BrowserTool:
             ) from exc
         self.profile_dir.mkdir(parents=True, exist_ok=True)
         self._playwright = sync_playwright().start()
-        self._context = self._playwright.chromium.launch_persistent_context(
-            user_data_dir=str(self.profile_dir),
-            headless=self.headless,
-            accept_downloads=False,
-        )
+        launch_options = {
+            "user_data_dir": str(self.profile_dir),
+            "headless": self.headless,
+            "accept_downloads": False,
+        }
+        if self.executable_path:
+            launch_options["executable_path"] = self.executable_path
+        try:
+            self._context = self._playwright.chromium.launch_persistent_context(**launch_options)
+        except Exception as exc:
+            source = f"o navegador local {self.executable_path}" if self.executable_path else "o navegador empacotado do Playwright"
+            raise RuntimeError(
+                f"Não foi possível iniciar {source}: {exc}. "
+                "Defina KAWA_BROWSER_EXECUTABLE para um Chromium/Chrome válido ou instale o Chromium do sistema."
+            ) from exc
         self._page = self._context.pages[0] if self._context.pages else self._context.new_page()
         self._page.set_default_timeout(15_000)
         return self._page

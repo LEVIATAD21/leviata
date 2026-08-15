@@ -46,6 +46,7 @@ def load_config():
         "obsidian_vault": None,
         "memory_context_chars": 6_000,
         "browser_profile_dir": str(Path.home() / ".kawa-ai" / "browser-profile"),
+        "browser_executable": None,
     }
     if CONFIG_FILE.exists():
         try:
@@ -128,6 +129,7 @@ def main():
     parser.add_argument("--memory-context-chars", type=int, help="Máximo de caracteres recentes recuperados do diário")
     parser.add_argument("--browser", action="store_true", help="Registra ferramentas para controlar um Chromium local isolado")
     parser.add_argument("--browser-headless", action="store_true", help="Executa o Chromium isolado sem janela visível")
+    parser.add_argument("--browser-executable", type=str, help="Caminho explícito para Chromium ou Chrome já instalados")
     
     args = parser.parse_args()
     config = load_config()
@@ -146,6 +148,8 @@ def main():
         config["knowledge_vault"] = args.knowledge_vault
     if args.memory_context_chars:
         config["memory_context_chars"] = args.memory_context_chars
+    if args.browser_executable:
+        config["browser_executable"] = args.browser_executable
 
     print(f"\n{Colors.HEADER}{Colors.BOLD}=== KAWA-AI (Multiagent Terminal System) ==={Colors.RESET}")
     print(f"  Provedor principal: {Colors.CYAN}{config.get('provider', 'nvidia')}{Colors.RESET}")
@@ -203,7 +207,11 @@ def main():
         else:
             policy = ToolPolicy(mode=config.get("policy_mode", "ask"), workspace=config.get("workspace"))
             agent = Agent(provider=main_provider, max_iterations=args.max_iterations, policy=policy, memory=memory)
-            browser = BrowserTool(config.get("browser_profile_dir"), headless=args.browser_headless) if args.browser else None
+            browser = BrowserTool(
+                config.get("browser_profile_dir"),
+                headless=args.browser_headless,
+                executable_path=config.get("browser_executable"),
+            ) if args.browser else None
             register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
