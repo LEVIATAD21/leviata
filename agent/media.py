@@ -44,17 +44,19 @@ class MediaToolkit:
             raise MediaError(f"'{command}' não está instalado. Instale-o no sistema antes de usar este módulo.")
         return resolved
 
-    def extract_frames(self, input_path: str, fps: float = 0.2) -> str:
-        """Extrai poucos quadros por segundo para investigação, evitando explosão de armazenamento."""
+    def extract_frame_files(self, input_path: str, fps: float = 0.2, max_frames: int = 120) -> tuple[Path, list[Path], Path]:
+        """Extrai frames e devolve fonte, arquivos e manifesto para pipelines multimodais."""
         if not 0.05 <= float(fps) <= 2.0:
             raise MediaError("A taxa de quadros deve ficar entre 0,05 e 2 quadros por segundo.")
+        if not 1 <= int(max_frames) <= 500:
+            raise MediaError("max_frames deve ficar entre 1 e 500.")
         source = self._resolve_source(input_path)
         ffmpeg = self._require_command("ffmpeg")
         output = self._output_dir(source, "frames")
         pattern = output / "frame-%06d.jpg"
         command = [
             ffmpeg, "-hide_banner", "-loglevel", "error", "-i", str(source),
-            "-vf", f"fps={float(fps):g}", "-q:v", "3", str(pattern),
+            "-vf", f"fps={float(fps):g}", "-frames:v", str(int(max_frames)), "-q:v", "3", str(pattern),
         ]
         try:
             self.runner(command, check=True, capture_output=True, text=True, timeout=600)
@@ -66,11 +68,18 @@ class MediaToolkit:
         manifest = {
             "source": str(source),
             "fps": float(fps),
+            "max_frames": int(max_frames),
             "frames": [frame.name for frame in frames],
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
-        (output / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        return f"{len(frames)} quadros extraídos em: {output}\nManifesto: {output / 'manifest.json'}"
+        manifest_path = output / "manifest.json"
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return source, frames, manifest_path
+
+    def extract_frames(self, input_path: str, fps: float = 0.2) -> str:
+        """Extrai poucos quadros por segundo para investigação, evitando explosão de armazenamento."""
+        _, frames, manifest = self.extract_frame_files(input_path, fps=fps)
+        return f"{len(frames)} quadros extraídos em: {manifest.parent}\nManifesto: {manifest}"
 
     @staticmethod
     def _whisper_binary() -> str:
@@ -89,7 +98,7 @@ class MediaToolkit:
             "whisper.cpp não foi encontrado. Configure KAWA_WHISPER_CPP_BIN ou instale um executável 'whisper-cli'."
         )
 
-    def transcribe(self, input_path: str, model_path: str | None = None) -> str:
+    def transcribe_file(self, input_path: str, model_path: str | None = None) -> Path:
         source = self._resolve_source(input_path)
         binary = self._whisper_binary()
         model = Path(model_path or os.environ.get("KAWA_WHISPER_MODEL", Path.home() / ".kawa-ai" / "models" / "ggml-base.bin")).expanduser()
@@ -109,4 +118,8 @@ class MediaToolkit:
         transcript = base.with_suffix(".txt")
         if not transcript.exists():
             raise MediaError("whisper.cpp terminou sem produzir o arquivo de transcrição esperado.")
+        return transcript
+
+    def transcribe(self, input_path: str, model_path: str | None = None) -> str:
+        transcript = self.transcribe_file(input_path, model_path)
         return f"Transcrição salva em: {transcript}"

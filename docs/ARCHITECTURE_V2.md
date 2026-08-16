@@ -12,11 +12,15 @@ No computador de referência, com 7,2 GB de RAM e GPU Intel integrada, a priorid
 |---|---|---|
 | CLI | Recebe tarefa, escolhe provedor e expõe modos de execução | Nenhuma |
 | Provider adapter | Uniformiza Ollama, APIs OpenAI-compatíveis e provedores opcionais | Configuração local sem chaves no repositório |
-| Agent loop | Mantém o contexto curto, valida chamadas de ferramenta e encerra ciclos | Histórico da sessão |
-| Tool registry | Expõe pesquisa, leitura, escrita e terminal sob schema explícito | Nenhuma |
+| Agent loop | Mantém o contexto ativo, valida chamadas de ferramenta e encerra ciclos | Histórico da sessão |
+| Context manager | Redige segredos, limita resultados, seleciona contexto e compacta histórico antigo | Configuração local |
+| Skill registry | Carrega skills Markdown relevantes ao pedido sem expor todo o catálogo | `skills/` e `~/.kawa-ai/skills/` |
+| Tool registry | Expõe pesquisa, leitura, escrita, terminal, navegador e multimodalidade sob schema explícito | Nenhuma |
 | Policy guard | Classifica ações em leitura, alteração e risco elevado; solicita confirmação quando configurado | Arquivo de política local |
 | Audit log | Registra ferramenta, argumentos redigidos, resultado resumido e status | JSONL local |
 | Web gateway | Consulta SearXNG local quando configurado; usa fonte pública de contingência e fetch com timeouts | Cache opcional de consulta |
+| Media pipeline | Extrai frames com timestamps, transcreve localmente e envia amostras ao provider somente após confirmação | `kawa-media/` |
+| Vision adapter | Analisa imagens e gera assets por provedores compatíveis configurados | Workspace e serviço autorizado |
 
 ## Política de ferramentas
 
@@ -27,6 +31,7 @@ As ferramentas não devem executar texto do modelo sem validação. Cada chamada
 | `observe` | Permitidas | Bloqueadas | Bloqueadas |
 | `ask` | Permitidas | Confirmação no terminal | Confirmação no terminal |
 | `workspace` | Permitidas | Permitidas apenas no diretório de trabalho | Confirmação no terminal |
+| `proactive` | Permitidas | Permitidas no workspace | Multimodalidade externa, navegador mutável, publicação, remoção e credenciais continuam confirmadas |
 
 O modo padrão será `ask`. Isso não impede automação local; torna cada ação verificável e permite que o proprietário altere a política conscientemente.
 
@@ -43,6 +48,8 @@ Ollama expõe a API local padrão em `http://localhost:11434/api` e documenta ci
 3. Adaptar as ferramentas para validar caminhos, schemas, timeouts e limites de resultado.
 4. Adicionar um gateway SearXNG configurável com fallback atual.
 5. Criar testes unitários para políticas, caminhos e roteamento de ferramentas.
+6. Adicionar skills carregadas seletivamente, compactação de contexto e redaction antes do provider.
+7. Integrar análise multimodal de imagens e vídeo local com manifesto, timestamps e transcrição opcional.
 
 ## Princípios consolidados das referências
 

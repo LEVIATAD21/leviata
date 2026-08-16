@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 
 class PolicyMode(str, Enum):
@@ -67,13 +68,26 @@ class ToolPolicy:
             return False
 
     def decide(self, tool_name: str, tool_input: dict[str, Any]) -> PolicyResult:
-        if tool_name in {"web_search", "web_fetch", "read_file", "knowledge_inquiry", "browser_read", "browser_navigate", "browser_close"}:
-            return PolicyResult(Decision.ALLOW, "Consulta ou leitura permitida.")
+        if tool_name in {"web_search", "web_fetch", "read_file", "knowledge_inquiry", "browser_read", "browser_navigate", "browser_close", "browser_screenshot", "browser_observe_video"}:
+            return PolicyResult(Decision.ALLOW, "Consulta, observação ou leitura permitida.")
 
         if tool_name in {"browser_click", "browser_type"}:
             if self.mode is PolicyMode.OBSERVE:
                 return PolicyResult(Decision.DENY, "O modo observe bloqueia interações no navegador.")
             return PolicyResult(Decision.ASK, "Interação no navegador pode alterar estado ou enviar dados e requer confirmação.")
+
+        if tool_name == "security_audit":
+            if self.mode is PolicyMode.OBSERVE:
+                return PolicyResult(Decision.DENY, "O modo observe bloqueia auditorias web.")
+            host = (urlparse(str(tool_input.get("url", ""))).hostname or "").lower()
+            if self.mode is PolicyMode.PROACTIVE and host in {"localhost", "127.0.0.1", "::1"}:
+                return PolicyResult(Decision.ALLOW, "Auditoria passiva de loopback permitida no modo proativo.")
+            return PolicyResult(Decision.ASK, "Auditoria web requer confirmação e alvo autorizado explicitamente.")
+
+        if tool_name in {"image_analyze", "image_generate", "video_analyze"}:
+            if self.mode is PolicyMode.OBSERVE:
+                return PolicyResult(Decision.DENY, "O modo observe bloqueia processamento multimodal.")
+            return PolicyResult(Decision.ASK, "A ação multimodal pode consumir recursos ou enviar mídia a um provider e requer confirmação.")
 
         if tool_name in {"media_extract_frames", "media_transcribe"}:
             if self.mode is PolicyMode.OBSERVE:
