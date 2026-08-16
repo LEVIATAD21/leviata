@@ -4,6 +4,9 @@ Adicione qualquer API compatível com OpenAI ou implemente a interface base.
 """
 from abc import ABC, abstractmethod
 from typing import List, Dict
+import base64
+import mimetypes
+from pathlib import Path
 
 
 class BaseLLMProvider(ABC):
@@ -12,6 +15,16 @@ class BaseLLMProvider(ABC):
     @abstractmethod
     def generate(self, system: str, messages: List[Dict[str, str]]) -> str:
         pass
+
+    def generate_multimodal(self, system: str, prompt: str, image_paths: List[str]) -> str:
+        raise NotImplementedError("Este provedor não oferece análise de imagens nesta configuração.")
+
+
+def _data_url(path: str) -> str:
+    file_path = Path(path).expanduser()
+    mime = mimetypes.guess_type(file_path.name)[0] or "image/jpeg"
+    encoded = base64.b64encode(file_path.read_bytes()).decode("ascii")
+    return f"data:{mime};base64,{encoded}"
 
 
 class OpenAIProvider(BaseLLMProvider):
@@ -34,6 +47,16 @@ class OpenAIProvider(BaseLLMProvider):
         )
         return response.choices[0].message.content
 
+    def generate_multimodal(self, system: str, prompt: str, image_paths: List[str]) -> str:
+        content = [{"type": "text", "text": prompt}]
+        content.extend({"type": "image_url", "image_url": {"url": _data_url(path)}} for path in image_paths)
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": content}],
+            max_tokens=4096,
+        )
+        return response.choices[0].message.content
+
 
 class AnthropicProvider(BaseLLMProvider):
     """Provedor para Anthropic (Claude 3.5, Claude 4, etc.)"""
@@ -49,6 +72,20 @@ class AnthropicProvider(BaseLLMProvider):
             max_tokens=4096,
             system=system,
             messages=messages
+        )
+        return response.content[0].text
+
+    def generate_multimodal(self, system: str, prompt: str, image_paths: List[str]) -> str:
+        content = [{"type": "text", "text": prompt}]
+        for path in image_paths:
+            file_path = Path(path).expanduser()
+            mime = mimetypes.guess_type(file_path.name)[0] or "image/jpeg"
+            content.append({"type": "image", "source": {"type": "base64", "media_type": mime, "data": base64.b64encode(file_path.read_bytes()).decode("ascii")}})
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=4096,
+            system=system,
+            messages=[{"role": "user", "content": content}],
         )
         return response.content[0].text
 
@@ -78,6 +115,22 @@ class GoogleProvider(BaseLLMProvider):
         response = chat.send_message(messages[-1]["content"])
         return response.text
 
+    def generate_multimodal(self, system: str, prompt: str, image_paths: List[str]) -> str:
+        from PIL import Image
+        model = genai.GenerativeModel(model_name=self.model_name, system_instruction=system)
+        parts = [prompt]
+        opened = []
+        try:
+            for path in image_paths:
+                image = Image.open(Path(path).expanduser())
+                opened.append(image)
+                parts.append(image)
+            response = model.generate_content(parts)
+            return response.text
+        finally:
+            for image in opened:
+                image.close()
+
 
 class OllamaProvider(BaseLLMProvider):
     """Provedor para Ollama (modelos locais: llama3, mistral, etc.)"""
@@ -99,6 +152,18 @@ class OllamaProvider(BaseLLMProvider):
         )
         return response.choices[0].message.content
 
+    def generate_multimodal(self, system: str, prompt: str, image_paths: List[str]) -> str:
+        from openai import OpenAI
+        client = OpenAI(api_key="ollama", base_url=f"{self.base_url}/v1")
+        content = [{"type": "text", "text": prompt}]
+        content.extend({"type": "image_url", "image_url": {"url": _data_url(path)}} for path in image_paths)
+        response = client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": content}],
+            max_tokens=4096,
+        )
+        return response.choices[0].message.content
+
 
 class CustomAPIProvider(BaseLLMProvider):
     """Provedor genérico para qualquer API compatível com OpenAI."""
@@ -114,6 +179,16 @@ class CustomAPIProvider(BaseLLMProvider):
             model=self.model,
             messages=all_messages,
             max_tokens=4096
+        )
+        return response.choices[0].message.content
+
+    def generate_multimodal(self, system: str, prompt: str, image_paths: List[str]) -> str:
+        content = [{"type": "text", "text": prompt}]
+        content.extend({"type": "image_url", "image_url": {"url": _data_url(path)}} for path in image_paths)
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": content}],
+            max_tokens=4096,
         )
         return response.choices[0].message.content
 

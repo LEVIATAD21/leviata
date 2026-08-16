@@ -7,12 +7,17 @@
   "knowledge_vault": "~/.kawa-ai/knowledge",
   "obsidian_vault": null,
   "memory_context_chars": 6000,
+  "max_history_messages": 24,
+  "max_history_chars": 36000,
+  "max_tool_result_chars": 8000,
   "browser_profile_dir": "~/.kawa-ai/browser-profile",
   "browser_profile_mode": "isolated",
   "browser_executable": null,
   "connections_metadata": "~/.kawa-ai/connections.json",
   "nvidia_max_models": 3,
   "supabase_knowledge_table": "kawa_knowledge",
+  "skills_dir": "~/.kawa-ai/skills",
+  "multimodal_external_calls": false,
 
   "_comentario_provedores": "Troque 'provider' por: openai, anthropic, google, ollama, custom. policy_mode pode ser observe, ask, workspace ou proactive.",
 

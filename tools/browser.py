@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 import shutil
+import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -92,6 +94,32 @@ class BrowserTool:
         page = self._ensure_page()
         page.locator(selector).first.fill(text)
         return f"Campo preenchido para o seletor: {selector}"
+
+    def screenshot(self, output_path: str | None = None) -> str:
+        page = self._ensure_page()
+        target = Path(output_path or (Path.cwd() / "kawa-media" / "browser" / f"page-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.png")).expanduser().resolve()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        page.screenshot(path=str(target), full_page=False)
+        return f"Screenshot salvo em: {target}"
+
+    def observe_video(self, output_path: str | None = None) -> str:
+        """Lê metadados de elementos HTML5 video e captura o viewport atual."""
+        page = self._ensure_page()
+        videos = page.locator("video")
+        metadata = []
+        for index in range(videos.count()):
+            metadata.append(videos.nth(index).evaluate("""(video) => ({
+                currentTime: video.currentTime,
+                duration: video.duration,
+                paused: video.paused,
+                ended: video.ended,
+                muted: video.muted,
+                src: video.currentSrc || video.src || null,
+                width: video.videoWidth,
+                height: video.videoHeight
+            })"""))
+        screenshot = self.screenshot(output_path)
+        return json.dumps({"url": page.url, "videos": metadata, "screenshot": screenshot}, ensure_ascii=False, indent=2)
 
     def close(self) -> str:
         if self._context:

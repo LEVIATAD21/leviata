@@ -25,6 +25,11 @@ from agent.policy import ToolPolicy
 from agent.router import TaskRoute, TaskRouter
 from agent.multiagent import MultiAgentOrchestrator
 from agent.rag import LocalRag, RagError
+from agent.context import ContextManager, ContextLimits
+from agent.skills import SkillRegistry
+from agent.image import ImageError, ImageToolkit
+from agent.video import VideoError, VideoToolkit
+from agent.security import SecurityError, SecurityToolkit
 from providers import get_provider, OpenAIProvider
 from tools import register_all_tools, web_search
 from tools.voice import VoiceError, listen, record, speak
@@ -193,12 +198,23 @@ def main():
     parser.add_argument("--supabase-check", action="store_true", help="Verifica endpoint, token e leitura Supabase sem gravar dados")
     parser.add_argument("--supabase-setup", action="store_true", help="Configura endpoint e token Supabase no cofre local por prompt oculto e verifica somente leitura")
     parser.add_argument("--supabase-endpoint", type=str, help="Endpoint HTTPS usado junto de --supabase-setup")
-    parser.add_argument("--media", action="store_true", help="Registra análise local de vídeo e transcrição por whisper.cpp")
+    parser.add_argument("--media", action="store_true", help="Registra extração de frames e transcrição local")
+    parser.add_argument("--multimodal", action="store_true", help="Ativa análise de imagens e vídeos pelo provider configurado")
+    parser.add_argument("--image-analyze", nargs="+", help="Analisa imagens do workspace e sai")
+    parser.add_argument("--image-prompt", type=str, default="Descreva os elementos relevantes e possíveis problemas.", help="Pergunta usada na análise de imagem")
+    parser.add_argument("--image-generate", type=str, help="Gera um asset visual pelo provider e sai")
+    parser.add_argument("--image-output", type=str, default="generated-image.png", help="Nome do asset visual gerado")
+    parser.add_argument("--video-analyze", type=str, help="Analisa um vídeo local com frames e áudio e sai")
+    parser.add_argument("--video-prompt", type=str, default="Resuma o vídeo, destaque eventos e transcreva instruções relevantes.", help="Pergunta usada na análise do vídeo")
+    parser.add_argument("--video-max-frames", type=int, default=12, help="Quantidade máxima de frames enviados ao provider")
+    parser.add_argument("--security-audit", type=str, help="Audita passivamente um site local ou host autorizado")
+    parser.add_argument("--security-allowed-host", action="append", default=[], help="Host adicional explicitamente autorizado para auditoria passiva")
     parser.add_argument("--extract-frames", type=str, help="Extrai quadros de um vídeo e sai")
     parser.add_argument("--frame-rate", type=float, default=0.2, help="Quadros por segundo na extração local (0,05 a 2)")
     parser.add_argument("--transcribe", type=str, help="Transcreve mídia por whisper.cpp e sai")
     parser.add_argument("--whisper-model", type=str, help="Caminho de modelo ggml para whisper.cpp")
     parser.add_argument("--quality", action="store_true", help="Registra auditoria local de código com ferramentas estáticas")
+    parser.add_argument("--security", action="store_true", help="Registra auditoria web defensiva passiva para alvos autorizados")
     parser.add_argument("--quality-audit", type=str, help="Audita arquivo ou diretório dentro da área de trabalho e sai")
     parser.add_argument("--quality-tools", type=str, default="ruff,bandit,semgrep", help="Ferramentas separadas por vírgula: ruff,bandit,semgrep")
     parser.add_argument("--design", action="store_true", help="Registra criação local de briefs e arquiteturas de design")
@@ -238,7 +254,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.image_analyze and not args.image_generate and not args.video_analyze and not args.security_audit:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -276,6 +292,23 @@ def main():
         if args.design_brief:
             print(design.create_brief(args.design_brief, args.design_medium))
             return
+
+        main_provider = get_provider(config)
+        image_toolkit = ImageToolkit(config.get("workspace", Path.cwd()), provider=main_provider)
+        video_toolkit = VideoToolkit(config.get("workspace", Path.cwd()), provider=main_provider, media=media)
+        if args.image_analyze:
+            print(image_toolkit.analyze(args.image_analyze, args.image_prompt))
+            return
+        if args.image_generate:
+            print(image_toolkit.generate(args.image_generate, args.image_output))
+            return
+        if args.video_analyze:
+            print(video_toolkit.analyze(args.video_analyze, args.video_prompt, args.frame_rate, args.video_max_frames, args.whisper_model))
+            return
+        if args.security_audit:
+            security = SecurityToolkit(config.get("workspace", Path.cwd()), allowed_hosts=set(args.security_allowed_host))
+            print(security.audit(args.security_audit))
+            return
         if args.nvidia_research:
             requested = [model.strip() for model in (args.nvidia_models or "").split(",") if model.strip()]
             report = NvidiaResearch().render(
@@ -299,7 +332,6 @@ def main():
             print(json.dumps(memory.markdown_index(), ensure_ascii=False, indent=2))
             return
 
-        main_provider = get_provider(config)
         knowledge_brain = KnowledgeBrain(
             main_provider,
             web_search,
@@ -332,7 +364,25 @@ def main():
             rag = LocalRag(args.rag_db) if args.rag else None
             if rag:
                 print(f"  {Colors.CYAN}Memória semântica local: {rag.stats()['entries']} trechos indexados{Colors.RESET}")
-            agent = Agent(provider=main_provider, max_iterations=args.max_iterations, policy=policy, memory=memory, rag=rag)
+            skill_registry = SkillRegistry([
+                Path(__file__).parent / "skills",
+                CONFIG_DIR / "skills",
+            ])
+            context_manager = ContextManager(ContextLimits(
+                max_history_messages=int(config.get("max_history_messages", 24)),
+                max_history_chars=int(config.get("max_history_chars", 36_000)),
+                max_tool_result_chars=int(config.get("max_tool_result_chars", 8_000)),
+                max_memory_chars=int(config.get("memory_context_chars", 6_000)),
+            ))
+            agent = Agent(
+                provider=main_provider,
+                max_iterations=args.max_iterations,
+                policy=policy,
+                memory=memory,
+                rag=rag,
+                context_manager=context_manager,
+                skill_registry=skill_registry,
+            )
             browser_profile = config.get("browser_profile_dir")
             if args.browser_service:
                 browser_profile = ConnectionStore().register_browser_profile(args.browser_service)
@@ -341,7 +391,17 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media if args.media else None, quality=quality if args.quality else None, design=design if args.design else None)
+            register_all_tools(
+                agent,
+                knowledge_brain=knowledge_brain,
+                browser=browser,
+                media=media if args.media else None,
+                quality=quality if args.quality else None,
+                design=design if args.design else None,
+                image=image_toolkit if args.multimodal else None,
+                video=video_toolkit if args.multimodal else None,
+                security=SecurityToolkit(config.get("workspace", Path.cwd()), allowed_hosts=set(args.security_allowed_host)) if args.security else None,
+            )
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:
@@ -360,7 +420,7 @@ def main():
                 result = agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")
 
-    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, VoiceError, RagError) as e:
+    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, VoiceError, RagError, ImageError, VideoError, SecurityError) as e:
         print(f"{Colors.FAIL}Erro de integração: {str(e)}{Colors.RESET}")
         sys.exit(1)
     except Exception as e:

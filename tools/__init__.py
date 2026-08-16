@@ -131,7 +131,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, image=None, video=None, security=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -190,6 +190,16 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, qu
             lambda: browser.close(),
             "Fecha a sessão isolada do navegador. Input: {}"
         )
+        agent.register_tool(
+            "browser_screenshot",
+            lambda output_path=None: browser.screenshot(output_path),
+            "Captura o viewport atual sem interagir com a página. Input: {output_path: 'arquivo.png'}"
+        )
+        agent.register_tool(
+            "browser_observe_video",
+            lambda output_path=None: browser.observe_video(output_path),
+            "Observa elementos HTML5 video e captura o viewport atual. Input: {output_path: 'arquivo.png'}"
+        )
     if media:
         agent.register_tool(
             "media_extract_frames",
@@ -212,4 +222,27 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, qu
             "design_brief",
             lambda request, medium="produto-digital": design.create_brief(request, medium),
             "Cria brief de design e diagrama Mermaid editáveis dentro do diretório de trabalho. Input: {request: '...', medium: 'site'}"
+        )
+    if image:
+        agent.register_tool(
+            "image_analyze",
+            lambda input_paths, prompt: image.analyze(input_paths, prompt),
+            "Analisa uma ou mais imagens do workspace com o provider multimodal. Input: {input_paths: ['frame.jpg'], prompt: 'descreva'}"
+        )
+        agent.register_tool(
+            "image_generate",
+            lambda prompt, output_name="generated-image.png", size="1024x1024": image.generate(prompt, output_name, size),
+            "Gera um asset visual via provider compatível configurado. Input: {prompt: '...', output_name: 'asset.png', size: '1024x1024'}"
+        )
+    if video:
+        agent.register_tool(
+            "video_analyze",
+            lambda input_path, prompt, fps=0.2, max_frames=12, whisper_model=None: video.analyze(input_path, prompt, fps, max_frames, whisper_model),
+            "Analisa vídeo local combinando frames, timestamps e transcrição. Input: {input_path: 'video.mp4', prompt: '...', fps: 0.2, max_frames: 12}"
+        )
+    if security:
+        agent.register_tool(
+            "security_audit",
+            lambda url: security.audit(url),
+            "Executa auditoria web defensiva e passiva apenas em loopback ou host autorizado. Input: {url: 'http://127.0.0.1:8000'}"
         )

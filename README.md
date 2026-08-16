@@ -18,7 +18,10 @@ Um assistente local para terminal Linux Mint, capaz de ler e criar arquivos, pes
 - **Execução de terminal com política local**: registra e confirma ações conforme o modo escolhido
 - **Pesquisa web configurável**: usa SearXNG local quando disponível, com fallback público
 - **Leitura e escrita de arquivos**: o modo `workspace` limita edições ao caminho definido
-- **Loop de ferramentas validado**: planeja, valida as chamadas antes de executá-las e mantém contexto curto
+- **Loop de ferramentas validado**: planeja, valida as chamadas antes de executá-las e mantém contexto selecionado
+- **Skills versionadas**: carrega instruções especializadas por domínio a partir de `skills/` e `~/.kawa-ai/skills/`
+- **Visão e vídeo**: analisa imagens e vídeos locais com frames temporais, transcrição e provider multimodal autorizado
+- **Design assistido**: cria briefs e pode gerar assets visuais quando o provider configurado oferece essa API
 - **Registro de auditoria**: salva ações em `~/.kawa-ai/logs/actions.jsonl`, com segredos redigidos
 - **Perfis leves para CPU**: configuração inicial voltada a `qwen2.5:1.5b`
 - **Interface bonita**: Terminal colorido e intuitivo
@@ -169,6 +172,15 @@ kawa --extract-frames ~/Vídeos/exemplo.mp4 --frame-rate 0.2
 # Transcreve mídia localmente quando whisper.cpp e um modelo ggml estiverem instalados
 kawa --transcribe ~/Vídeos/exemplo.mp4 --whisper-model ~/.kawa-ai/models/ggml-base.bin
 
+# Analisa um vídeo com frames temporais, áudio local e um provider multimodal autorizado
+kawa --multimodal --video-analyze ~/Vídeos/exemplo.mp4 --video-prompt "Encontre as etapas do tutorial e associe cada uma a timestamps"
+
+# Analisa uma ou mais imagens do workspace
+kawa --multimodal --image-analyze kawa-media/frames/frame-000001.jpg --image-prompt "Identifique problemas de interface e proponha melhorias"
+
+# Gera um asset visual quando o provider compatível e o modelo de imagem estão configurados
+kawa --multimodal --image-generate "Ilustração editorial para um painel de estudos" --image-output painel.png
+
 # Faz auditoria estática defensiva no projeto atual e gera relatório JSON local
 kawa --policy proactive --workspace ~/Projetos/meu-app --quality-audit . --quality-tools ruff,bandit
 
@@ -193,6 +205,11 @@ kawa --provider ollama --model llama3
 | `write_file` | Cria ou edita arquivos |
 | `web_search` | Busca informações na web (DuckDuckGo) |
 | `web_fetch` | Acessa uma URL e retorna o conteúdo |
+| `browser_screenshot` | Captura o viewport atual do navegador isolado |
+| `browser_observe_video` | Observa metadados de elementos HTML5 video e salva screenshot |
+| `image_analyze` | Analisa imagens dentro do workspace com um provider multimodal |
+| `image_generate` | Gera assets visuais quando o provider oferece API de imagens |
+| `video_analyze` | Combina frames, timestamps e transcrição local para analisar vídeo |
 
 Os modos de política são `observe` (somente consulta), `ask` (padrão; confirma escrita e comandos), `workspace` (permite edições no diretório definido e confirma ações de maior impacto) e `proactive` (avança em tarefas locais rotineiras, mas mantém confirmações para operações externas, irreversíveis ou sensíveis).
 
@@ -226,9 +243,17 @@ Serviços externos mantêm regras próprias de autorização e expiração. Inst
 
 Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotion são módulos opcionais. As integrações comerciais dependem de conta, chave ou infraestrutura autorizada pelo proprietário; não são substituídas por automação de navegador ou por credenciais inexistentes. Leia `docs/INTEGRATION_RESEARCH.md` antes de ativar um provedor.
 
+### Skills e contexto longo
+
+As skills são arquivos Markdown versionados em `skills/` e carregados seletivamente conforme o pedido. Você pode criar `~/.kawa-ai/skills/<nome>/SKILL.md` para adicionar um procedimento local sem alterar o loop do agente. O carregamento de uma skill não concede permissão: escrita, comandos, navegador e envio de mídia continuam sujeitos à política local.
+
+O gerenciador de contexto redige padrões óbvios de chaves, limita resultados de ferramentas e compacta o histórico antigo em um resumo antes de atingir os limites configurados. Isso permite tarefas longas com memória persistente, mas **não cria tokens ilimitados**: cada modelo, janela de contexto, hardware, API e serviço mantém seus próprios limites.
+
 ### Qualidade, programação e segurança defensiva
 
 `--quality-audit` executa verificações estáticas dentro do diretório de trabalho e grava o relatório em `kawa-quality/`. Ruff verifica qualidade e formatação de Python; Bandit procura padrões comuns de segurança em Python; Semgrep executa regras estáticas para código. O módulo não explora sistemas, não realiza varredura de rede e não opera fora do diretório configurado. Instale apenas as ferramentas que quiser usar no ambiente local: `python3 -m pip install ruff bandit semgrep`.
+
+A análise multimodal exige um modelo que aceite imagens. Em provedores externos, os arquivos podem ser enviados ao serviço e a política padrão pede confirmação. Para manter mídia local, use um modelo multimodal local compatível com Ollama; disponibilidade e desempenho dependem do hardware.
 
 ### Design estruturado
 
