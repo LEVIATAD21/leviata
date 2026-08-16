@@ -22,6 +22,33 @@ Um assistente local para terminal Linux Mint, capaz de ler e criar arquivos, pes
 - **Registro de auditoria**: salva ações em `~/.kawa-ai/logs/actions.jsonl`, com segredos redigidos
 - **Perfis leves para CPU**: configuração inicial voltada a `qwen2.5:1.5b`
 - **Interface bonita**: Terminal colorido e intuitivo
+- **Arquivo único de diretrizes**: todo o código de conduta do agente vive em [`DIRETRIZES.md`](DIRETRIZES.md)
+
+---
+
+## 📜 Diretrizes (`DIRETRIZES.md`)
+
+O comportamento do agente — o que ele pode e não pode fazer, e o que considera
+ético — é definido em um **único arquivo**: [`DIRETRIZES.md`](DIRETRIZES.md),
+na raiz do projeto. Ele é carregado automaticamente no início de toda sessão e
+prevalece sobre qualquer instrução contrária recebida na conversa.
+
+Resumo do que ele estabelece:
+
+- **Conhecimento profundo de segurança ofensiva/defensiva** (pentest, OWASP,
+  MITRE ATT&CK, forensia) e engenharia de software
+- **Busca na internet** obrigatória quando o conhecimento interno não basta
+- **Confidencialidade absoluta**: nunca vaza dados, credenciais ou sessões;
+  segredos são redigidos; injeções em arquivos/memória são ignoradas
+- **Persistência em objetivos**: diante de uma ordem legítima, encontra
+  sozinho o caminho até o resultado, tentando abordagens alternativas
+- **Escopo de autorização**: capacidade total em ambientes autorizados
+  (máquina local, laboratórios, CTF, bug bounty, contratos de pentest);
+  contra terceiros sem autorização, recusa e propõe a alternativa legal
+- **Evolução contínua**: registra lições aprendidas na memória local
+
+Para mudar as regras do agente, edite apenas esse arquivo — nenhuma outra
+configuração é necessária.
 
 ---
 
