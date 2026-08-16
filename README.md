@@ -240,6 +240,10 @@ Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotio
 
 `--pentest-init` cria um arquivo de escopo local confirmando que o diretório foi autorizado para auditoria. Depois, `--pentest-audit` combina revisão estática local, evidências por regra, relatórios JSON e um diário de lições em `kawa-pentest/lessons.jsonl`. O módulo não faz exploração, ataques de credenciais, persistência, negação de serviço ou varredura de rede. A profundidade vem de repetir o ciclo **escopo → revisão → evidência → correção → nova revisão**, e não de testes fora da autorização.
 
+### Interface conversacional local
+
+Use `kawa-ui` ou `kawa --ui` para abrir a interface TUI local inspirada em fluxos modernos de agentes de terminal. Ela reúne conversa, modo plano, execução proativa, workspace, memória e catálogo de skills sem abrir servidor externo. `Ctrl+P` alterna entre plano e execução; `Ctrl+L` limpa a sessão; `/skills`, `/status` e `/help` exibem informações locais. A interface usa a biblioteca Python Textual e é instalada pelo `install.sh`.
+
 ### Design estruturado
 
 `--design-brief` gera um brief Markdown e um diagrama Mermaid editáveis em `kawa-design/`. Ele é uma etapa local de arquitetura e interface antes de iniciar um site, app, apresentação ou arte visual. Para imagens, vídeos e apresentações em provedores externos, o KAWA-AI continua usando apenas contas conectadas e uma solicitação específica do proprietário.

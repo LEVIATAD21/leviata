@@ -10,6 +10,7 @@ from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
 from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
+from ui.service import UICommand
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
@@ -262,6 +263,11 @@ class ToolPolicyTests(unittest.TestCase):
         report = SkillsCatalog.render_report()
         self.assertIn("Catálogo de Skills", report)
         self.assertIn("ethical_pentest", report)
+
+    def test_ui_command_parser(self):
+        command = UICommand.parse("/skills")
+        self.assertEqual(command.name, "skills")
+        self.assertIsNone(UICommand.parse("crie um plano"))
 
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:

@@ -111,7 +111,14 @@ cat > "$LAUNCHER" << 'EOF'
 exec "$HOME/.kawa-ai/venv/bin/python" "$HOME/.kawa-ai/repo/main.py" "$@"
 EOF
 
+UI_LAUNCHER="$HOME/.local/bin/kawa-ui"
+cat > "$UI_LAUNCHER" << 'EOF'
+#!/usr/bin/env bash
+exec "$HOME/.kawa-ai/venv/bin/python" "$HOME/.kawa-ai/repo/main.py" --ui "$@"
+EOF
+
 chmod +x "$LAUNCHER"
+chmod +x "$UI_LAUNCHER"
 
 # Adiciona ao PATH se necessário
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
@@ -131,6 +138,7 @@ echo -e "${GREEN}${BOLD}║  KAWA-AI instalado com sucesso!                     
 echo -e "${GREEN}${BOLD}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo -e "\n${CYAN}Como usar:${NC}"
 echo -e "  ${BOLD}kawa${NC}                         # Inicia o chat interativo"
+echo -e "  ${BOLD}kawa-ui${NC}                      # Abre a interface conversacional local"
 echo -e "  ${BOLD}kawa \"sua tarefa aqui\"${NC}       # Executa uma tarefa direta"
 echo -e "  ${BOLD}kawa --provider ollama${NC}       # Usa modelos locais (grátis)"
 echo -e "\n${YELLOW}Na primeira execução, o cofre Obsidian será localizado e você poderá configurar o provedor.${NC}"
