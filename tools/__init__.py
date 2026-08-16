@@ -131,7 +131,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -218,4 +218,10 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, qu
             "ethical_pentest",
             lambda target_path=".", tools=None: pentest.audit(target_path, tools),
             "Audita somente um projeto local já autorizado pelo arquivo de escopo; não faz varredura de rede, exploração ou ataque de credenciais. Input: {target_path: '.', tools: ['ruff', 'bandit', 'semgrep']}"
+        )
+    if adversary:
+        agent.register_tool(
+            "adversary_simulate",
+            lambda target_path=".": adversary.simulate(target_path),
+            "Simula ameaças (OWASP Top 10 e MITRE ATT&CK) e gera recomendações preventivas de hardening. Input: {target_path: '.'}"
         )

@@ -18,6 +18,7 @@ from agent.media import MediaError, MediaToolkit
 from agent.design import DesignError, DesignToolkit
 from agent.quality import QualityError, QualityToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
+from agent.adversary import AdversarySimulation, AdversaryError
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore, SupabaseMemoryError
 from agent.knowledge import KnowledgeBrain
@@ -214,6 +215,8 @@ def main():
     parser.add_argument("--pentest-init", type=str, help="Inicializa o escopo ético para um diretório dentro da área de trabalho")
     parser.add_argument("--pentest-audit", type=str, help="Audita um escopo ético já inicializado e salva evidências locais")
     parser.add_argument("--pentest-authorized", action="store_true", help="Confirma que você possui autorização para inicializar o escopo de pentest")
+    parser.add_argument("--adversary", action="store_true", help="Registra simulação de adversário e modelagem de ameaças OWASP/MITRE")
+    parser.add_argument("--adversary-simulate", type=str, help="Executa modelagem de ameaças e hardening preventivo em um diretório e sai")
     
     args = parser.parse_args()
     config = load_config()
@@ -243,7 +246,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -255,6 +258,7 @@ def main():
         quality = QualityToolkit(config.get("workspace", Path.cwd()))
         design = DesignToolkit(config.get("workspace", Path.cwd()))
         pentest = EthicalPentestToolkit(config.get("workspace", Path.cwd()), quality=quality)
+        adversary = AdversarySimulation(config.get("workspace", Path.cwd()))
         if args.extract_frames:
             print(media.extract_frames(args.extract_frames, args.frame_rate))
             return
@@ -288,6 +292,9 @@ def main():
         if args.pentest_audit:
             selected_quality_tools = [item.strip() for item in args.quality_tools.split(",") if item.strip()]
             print(pentest.audit(args.pentest_audit, selected_quality_tools))
+            return
+        if args.adversary_simulate:
+            print(adversary.simulate(args.adversary_simulate))
             return
         if args.nvidia_research:
             requested = [model.strip() for model in (args.nvidia_models or "").split(",") if model.strip()]
@@ -354,7 +361,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media if args.media else None, quality=quality if args.quality else None, design=design if args.design else None, pentest=pentest if args.pentest else None)
+            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media if args.media else None, quality=quality if args.quality else None, design=design if args.design else None, pentest=pentest if args.pentest else None, adversary=adversary if args.adversary else None)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:
@@ -373,7 +380,7 @@ def main():
                 result = agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")
 
-    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, PentestError, VoiceError, RagError) as e:
+    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, PentestError, AdversaryError, VoiceError, RagError) as e:
         print(f"{Colors.FAIL}Erro de integração: {str(e)}{Colors.RESET}")
         sys.exit(1)
     except Exception as e:

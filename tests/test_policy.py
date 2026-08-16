@@ -7,6 +7,7 @@ from agent.connections import ConnectionStore
 from agent.design import DesignToolkit
 from agent.media import MediaError, MediaToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
+from agent.adversary import AdversarySimulation, AdversaryError
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
@@ -61,6 +62,10 @@ class ToolPolicyTests(unittest.TestCase):
     def test_proactive_policy_allows_ethical_pentest(self):
         policy = ToolPolicy("proactive", self.workspace)
         self.assertEqual(policy.decide("ethical_pentest", {"target_path": "."}).decision, Decision.ALLOW)
+
+    def test_proactive_policy_allows_adversary_simulate(self):
+        policy = ToolPolicy("proactive", self.workspace)
+        self.assertEqual(policy.decide("adversary_simulate", {"target_path": "."}).decision, Decision.ALLOW)
 
     def test_high_impact_shell_requires_confirmation(self):
         policy = ToolPolicy("workspace", self.workspace)
@@ -237,6 +242,14 @@ class ToolPolicyTests(unittest.TestCase):
         result = pentest.audit("authorized-project", ["ruff"])
         self.assertIn("Achados locais: 1", result)
         self.assertTrue((target / "kawa-pentest" / "lessons.jsonl").exists())
+
+    def test_adversary_simulation_generates_report(self):
+        target = self.workspace / "sim-project"
+        target.mkdir()
+        sim = AdversarySimulation(self.workspace)
+        result = sim.simulate("sim-project")
+        self.assertIn("Simulação de adversário concluída", result)
+        self.assertTrue(list((target / "kawa-pentest").glob("adversary-simulation-*.json")))
 
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:

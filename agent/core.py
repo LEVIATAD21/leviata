@@ -32,6 +32,7 @@ Ferramentas disponíveis:
 - quality_audit: Executa lint e auditoria defensiva estática no diretório de trabalho. Input: {"target_path": ".", "tools": ["ruff", "bandit", "semgrep"]}
 - design_brief: Cria brief de design e arquitetura Mermaid editáveis no diretório de trabalho. Input: {"request": "...", "medium": "site"}
 - ethical_pentest: Audita projeto local previamente autorizado por escopo, usando revisão estática, evidências e lições locais. Input: {"target_path": ".", "tools": ["ruff", "bandit", "semgrep"]}
+- adversary_simulate: Modela ameaças (OWASP Top 10 e MITRE ATT&CK) e gera recomendações preventivas de hardening. Input: {"target_path": "."}
 
 Para usar uma ferramenta, responda EXATAMENTE neste formato JSON:
 <tool_call>
