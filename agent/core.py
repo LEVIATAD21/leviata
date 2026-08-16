@@ -4,12 +4,22 @@ Suporta múltiplos LLMs e execução de ferramentas sem limite de contexto.
 """
 import json
 import re
+from pathlib import Path
 from typing import List, Dict, Any, Callable
 
 from agent.audit import AuditLogger
 from agent.memory import ObsidianMemory
 from agent.policy import Decision, ToolPolicy
 from agent.rag import LocalRag, RagError
+
+_DIRETRIZES_PATH = Path(__file__).resolve().parent.parent / "DIRETRIZES.md"
+
+
+def _load_diretrizes() -> str:
+    try:
+        return _DIRETRIZES_PATH.read_text(encoding="utf-8")
+    except OSError:
+        return ""
 
 SYSTEM_PROMPT = """Você é o KAWA-AI, um assistente local de terminal Linux orientado a ferramentas.
 Você pensa por etapas, usa somente as ferramentas registradas e descreve limites ou falhas com clareza.
@@ -51,6 +61,8 @@ Quando o usuário pedir um site, primeiro construa e teste; se houver publicaç�
 Para consultas profundas, preserve a pergunta em partes curtas, diferencie fatos de hipóteses e recupere apenas o contexto necessário. Não prometa limites de token, permissões ou resultados que dependam de um provedor externo.
 Para tarefas com múltiplas etapas, trabalhe ponta a ponta: identifique o objetivo, selecione automaticamente as ferramentas registradas, execute em uma ordem justificável, valide o resultado e registre a lição local. Não espere que o usuário invoque cada skill pelo nome. Interprete abreviações, erros ortográficos leves e linguagem informal pelo contexto, sem exigir que o usuário reformule a ordem.
 """
+
+SYSTEM_PROMPT += "\n\n# DIRETRIZES OFICIAIS (arquivo único: DIRETRIZES.md)\n" + _load_diretrizes()
 
 class Agent:
     def __init__(self, provider, max_iterations: int | None = 12, policy: ToolPolicy | None = None,
