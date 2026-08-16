@@ -53,11 +53,12 @@ Para tarefas com múltiplas etapas, trabalhe ponta a ponta: identifique o objeti
 """
 
 class Agent:
-    def __init__(self, provider, max_iterations: int = 12, policy: ToolPolicy | None = None,
+    def __init__(self, provider, max_iterations: int | None = 12, policy: ToolPolicy | None = None,
                  audit_logger: AuditLogger | None = None, memory: ObsidianMemory | None = None,
                  rag: LocalRag | None = None, rag_query_limit: int = 3):
         self.provider = provider
-        self.max_iterations = max_iterations
+        # 0/None significa seguir até resposta final; o detector de repetição continua ativo.
+        self.max_iterations = None if max_iterations is None or max_iterations <= 0 else max_iterations
         self.history: List[Dict[str, str]] = []
         self.tools: Dict[str, Callable] = {}
         self.tool_descriptions: List[str] = []
@@ -183,7 +184,11 @@ class Agent:
         self.history.append({"role": "user", "content": user_input})
         self.history = self.history[-24:]
         
-        for iteration in range(self.max_iterations):
+        iteration = 0
+        last_tool_fingerprint = None
+        repeated_tool_calls = 0
+        while self.max_iterations is None or iteration < self.max_iterations:
+            iteration += 1
             # Gera resposta do LLM
             response = self.provider.generate(
                 system=SYSTEM_PROMPT,
@@ -201,6 +206,19 @@ class Agent:
                 if "command" in tool_input:
                     print(f"   $ {tool_input['command']}")
                 
+                # Evita que um provedor fique repetindo exatamente a mesma chamada para sempre.
+                fingerprint = json.dumps({"tool": tool_name, "input": tool_input}, sort_keys=True, ensure_ascii=False)
+                if fingerprint == last_tool_fingerprint:
+                    repeated_tool_calls += 1
+                else:
+                    last_tool_fingerprint = fingerprint
+                    repeated_tool_calls = 1
+                if repeated_tool_calls >= 5:
+                    tool_result = "A execução foi interrompida porque a mesma chamada de ferramenta se repetiu cinco vezes sem progresso verificável."
+                    self.audit_logger.record(tool_name, tool_input, "loop_guard", tool_result)
+                    self._remember(user_input, tool_result)
+                    return tool_result
+
                 # Executa a ferramenta
                 tool_result = self._execute_tool(tool_name, tool_input)
                 

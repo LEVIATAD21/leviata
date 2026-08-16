@@ -66,7 +66,7 @@ class ConversationService:
         memory = self._memory()
         policy_name = "observe" if plan_mode else self.config.get("policy_mode", "proactive")
         policy = ToolPolicy(policy_name, self.workspace)
-        agent = Agent(provider=provider, max_iterations=12, policy=policy, memory=memory)
+        agent = Agent(provider=provider, max_iterations=0, policy=policy, memory=memory)
         knowledge = KnowledgeBrain(provider, web_search, vault_path=self.config.get("knowledge_vault"), memory=memory)
         quality = QualityToolkit(self.workspace)
         design = DesignToolkit(self.workspace)

@@ -1,5 +1,7 @@
 import tempfile
+import os
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from agent.audit import AuditLogger
@@ -22,12 +24,25 @@ from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import Decision, ToolPolicy
 from agent.router import TaskRoute, TaskRouter
+from tools import _network_session, _network_settings
 from tools.browser import BrowserTool
 
 
 class ToolPolicyTests(unittest.TestCase):
     def setUp(self):
         self.workspace = Path(tempfile.mkdtemp())
+
+    def test_network_settings_are_configurable_without_external_call(self):
+        with mock.patch.dict(os.environ, {
+            "KAWA_NETWORK_TIMEOUT": "7",
+            "KAWA_NETWORK_RETRIES": "4",
+            "KAWA_NETWORK_BACKOFF": "0.25",
+        }, clear=False):
+            self.assertEqual(_network_settings(), (7.0, 4, 0.25))
+            session = _network_session()
+            adapter = session.get_adapter("https://example.com")
+            self.assertEqual(adapter.max_retries.total, 4)
+            self.assertEqual(adapter.max_retries.backoff_factor, 0.25)
 
     def test_observe_allows_read_but_blocks_writes(self):
         policy = ToolPolicy("observe", self.workspace)

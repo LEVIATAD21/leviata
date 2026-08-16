@@ -119,7 +119,11 @@ Você também pode passar uma ordem diretamente, se preferir: `kawa "crie e test
 
 ## 🛠️ Ferramentas Disponíveis
 
-O agente seleciona automaticamente as ferramentas compatíveis com cada pedido, incluindo terminal, arquivos, pesquisa, navegador isolado, mídia, auditoria, design, pentest autorizado, modelagem de ameaças, memória e materialização local de documentação em skills.
+O agente seleciona automaticamente as ferramentas compatíveis com cada pedido, incluindo terminal, arquivos, pesquisa, navegador isolado, mídia, auditoria, design, pentest autorizado, modelagem de ameaças, memória e materialização local de documentação em skills. O modo conversacional segue até a resposta final, sem um contador artificial de iterações; um detector interrompe apenas a repetição improdutiva da mesma chamada de ferramenta.
+
+Os adaptadores OpenAI, Google, Ollama e APIs compatíveis não impõem mais `4096` tokens fixos pelo KAWA-AI. O limite efetivo continua sendo o contexto, a capacidade do modelo, a configuração do provedor e os recursos do computador. A API Anthropic exige um campo de saída e usa um valor de compatibilidade quando ele não é configurado.
+
+As ferramentas web usam a conectividade normal do Linux, incluindo `HTTP_PROXY`/`HTTPS_PROXY` quando definidos pelo sistema, e repetem falhas transitórias com backoff. Se necessário, `KAWA_NETWORK_TIMEOUT`, `KAWA_NETWORK_RETRIES` e `KAWA_NETWORK_BACKOFF` ajustam timeout, tentativas e espera. O fallback de busca tenta SearXNG local e depois um endpoint público. Isso melhora disponibilidade, mas não elimina falhas de DNS, indisponibilidade, bloqueios de rede ou limites de serviços externos.
 
 Os modos de política são `observe` (somente consulta), `ask` (confirma escrita e comandos), `workspace` (permite edições no diretório definido) e `proactive` (avança em tarefas locais rotineiras, mantendo confirmações para ações externas, irreversíveis ou sensíveis).
 

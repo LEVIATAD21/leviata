@@ -85,6 +85,14 @@ class AgentRunTests(unittest.TestCase):
         history_text = json.dumps(agent.history, ensure_ascii=False)
         self.assertIn("não encontrada", history_text)
 
+    def test_unlimited_mode_stops_only_on_repeated_tool_loop(self):
+        provider = FakeProvider([{"tool": "read_file", "input": {"path": "same.txt"}}])
+        agent = Agent(provider, max_iterations=0, policy=ToolPolicy("proactive", self.work), audit_logger=self.audit)
+        agent.register_tool("read_file", FakeTools.read_file, "lê")
+        result = agent.run("continue até concluir")
+        self.assertIn("mesma chamada de ferramenta se repetiu", result)
+        self.assertGreaterEqual(provider.index, 5)
+
     def test_max_iterations_hit(self):
         provider = FakeProvider([
             {"tool": "read_file", "input": {"path": "x"}},

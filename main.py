@@ -169,7 +169,7 @@ def main():
     parser.add_argument("--api-key", type=str, help="Chave de API")
     parser.add_argument("--workspace", type=str, help="Diretório permitido para edições no modo workspace")
     parser.add_argument("--policy", choices=["observe", "ask", "workspace", "proactive"], help="Política de ferramentas")
-    parser.add_argument("--max-iterations", type=int, default=12, help="Máximo de ciclos por tarefa")
+    parser.add_argument("--max-iterations", type=int, default=0, help="Máximo de ciclos; 0 segue até resposta final com proteção contra repetição")
     parser.add_argument("--interactive", action="store_true", help="Abre conversa local interativa")
     parser.add_argument("--knowledge", type=str, help="Consulta um assunto pelo módulo de conhecimento")
     parser.add_argument("--knowledge-save", action="store_true", help="Salva a consulta no cofre local Markdown")

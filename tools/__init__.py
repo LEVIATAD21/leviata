@@ -6,6 +6,51 @@ import subprocess
 import os
 import requests
 from pathlib import Path
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+
+def _network_settings() -> tuple[float, int, float]:
+    """Lê parâmetros de rede sem exigir alteração de código ou de credenciais."""
+    try:
+        timeout = max(1.0, float(os.environ.get("KAWA_NETWORK_TIMEOUT", "30")))
+    except ValueError:
+        timeout = 30.0
+    try:
+        retries = max(0, min(10, int(os.environ.get("KAWA_NETWORK_RETRIES", "3"))))
+    except ValueError:
+        retries = 3
+    try:
+        backoff = max(0.0, min(30.0, float(os.environ.get("KAWA_NETWORK_BACKOFF", "0.5"))))
+    except ValueError:
+        backoff = 0.5
+    return timeout, retries, backoff
+
+
+def _network_session() -> requests.Session:
+    """Cria uma sessão resiliente; requests respeita HTTP(S)_PROXY do ambiente."""
+    _, retries, backoff = _network_settings()
+    retry = Retry(
+        total=retries,
+        connect=retries,
+        read=retries,
+        status=retries,
+        backoff_factor=backoff,
+        status_forcelist=(408, 425, 429, 500, 502, 503, 504),
+        allowed_methods=frozenset({"GET", "HEAD", "OPTIONS"}),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session = requests.Session()
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
+def _network_get(url: str, **kwargs):
+    timeout, _, _ = _network_settings()
+    kwargs.setdefault("timeout", timeout)
+    return _network_session().get(url, **kwargs)
 
 
 def shell_execute(command: str) -> str:
@@ -65,18 +110,21 @@ def web_search(query: str) -> str:
     try:
         searx_url = os.environ.get("KAWA_SEARXNG_URL", "").rstrip("/")
         if searx_url:
-            response = requests.get(
-                f"{searx_url}/search",
-                params={"q": query, "format": "json"},
-                timeout=12,
-            )
-            response.raise_for_status()
-            results = response.json().get("results", [])[:5]
-            if results:
-                return "\n".join(
-                    f"- {item.get('title', 'Sem título')}: {item.get('url', '')}\n  {item.get('content', '')[:300]}"
-                    for item in results
+            try:
+                response = _network_get(
+                    f"{searx_url}/search",
+                    params={"q": query, "format": "json"},
                 )
+                response.raise_for_status()
+                results = response.json().get("results", [])[:5]
+                if results:
+                    return "\n".join(
+                        f"- {item.get('title', 'Sem título')}: {item.get('url', '')}\n  {item.get('content', '')[:300]}"
+                        for item in results
+                    )
+            except Exception:
+                # Uma instância local indisponível não deve bloquear o fallback público.
+                pass
         url = "https://api.duckduckgo.com/"
         params = {
             "q": query,
@@ -84,7 +132,7 @@ def web_search(query: str) -> str:
             "no_html": "1",
             "skip_disambig": "1"
         }
-        response = requests.get(url, params=params, timeout=10)
+        response = _network_get(url, params=params)
         data = response.json()
         
         results = []
@@ -109,7 +157,7 @@ def web_fetch(url: str) -> str:
         headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
         }
-        response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
+        response = _network_get(url, headers=headers, allow_redirects=True)
         if len(response.content) > 2_000_000:
             return "Erro: resposta excede o limite de 2 MB para leitura local."
         response.raise_for_status()
