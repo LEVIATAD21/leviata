@@ -278,6 +278,18 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("quality_audit", skills)
         self.assertIn("ethical_pentest", skills)
 
+    def test_orchestrator_executes_agent_and_writes_workflow_record(self):
+        class StubAgent:
+            def run(self, prompt):
+                self.prompt = prompt
+                return "Resultado local validado."
+
+        agent = StubAgent()
+        result = TaskOrchestrator(self.workspace).run("Revise o código Python", agent)
+        self.assertIn("Pedido do usuário", agent.prompt)
+        self.assertEqual(result.answer, "Resultado local validado.")
+        self.assertTrue(result.record_path and result.record_path.exists())
+
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:
             def __init__(self):
