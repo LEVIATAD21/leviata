@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+from agent.language import routing_text
+
 
 @dataclass(frozen=True)
 class WorkflowStep:
@@ -28,9 +30,9 @@ class WorkflowResult:
     record_path: Path | None = None
 
     def render(self) -> str:
-        plan = "\n".join(f"  {idx}. {step.skill}: {step.purpose}" for idx, step in enumerate(self.steps, 1))
+        # A interface mantém a conversa limpa; o plano completo fica no JSON local.
         record = f"\nRegistro local: {self.record_path}" if self.record_path else ""
-        return f"=== Fluxo automático KAWA-AI ===\nSkills selecionadas:\n{plan}\n\nResultado:\n{self.answer}{record}"
+        return f"{self.answer}{record}"
 
 
 class TaskOrchestrator:
@@ -55,6 +57,8 @@ class TaskOrchestrator:
          WorkflowStep("knowledge_inquiry", "investigar fontes, separar fatos de hipóteses e sintetizar contexto")),
         (("supabase", "banco", "memória", "memoria", "conhecimento", "lições", "licoes"),
          WorkflowStep("knowledge_memory", "recuperar e registrar apenas resultados aprovados e não sensíveis")),
+        (("livro", "manual", "documentação", "documentacao", "pdf", "epub", "skill", "skills"),
+         WorkflowStep("skill_materialize", "estruturar material local em uma skill consultável sem publicar automaticamente")),
     )
 
     _BASE_STEPS = (
@@ -69,7 +73,7 @@ class TaskOrchestrator:
         self.record_dir = Path(record_dir).expanduser().resolve() if record_dir else self.workspace / "kawa-workflows"
 
     def plan(self, task: str) -> list[WorkflowStep]:
-        normalized = task.lower()
+        normalized = routing_text(task)
         selected: list[WorkflowStep] = [self._BASE_STEPS[0]]
         for keywords, step in self._RULES:
             if any(re.search(rf"\b{re.escape(keyword)}", normalized) for keyword in keywords):
@@ -103,6 +107,7 @@ class TaskOrchestrator:
         steps = self.plan(task)
         plan_text = "\n".join(f"- {step.skill}: {step.purpose}" for step in steps)
         enriched_task = (
+            "Interprete a intenção mesmo com abreviações, erros ortográficos leves ou texto informal. "
             "Execute esta tarefa de ponta a ponta. Selecione e use automaticamente as ferramentas "
             "registradas que forem necessárias; não espere o usuário pedir cada skill. Respeite a política "
             "local, o workspace e as confirmações obrigatórias. Antes de encerrar, valide o que for possível, "

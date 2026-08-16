@@ -22,6 +22,7 @@ from agent.adversary import AdversarySimulation, AdversaryError
 from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
 from agent.orchestrator import TaskOrchestrator
+from agent.skill_builder import SkillBuilder
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore, SupabaseMemoryError
 from agent.knowledge import KnowledgeBrain
@@ -254,12 +255,9 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.ui and not args.autonomous and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.skills_catalog:
-        print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
-        print(f"  python3 main.py --interactive")
-        print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
-        print(f"  python3 main.py \"Sua tarefa monoagente aqui\"\n")
-        sys.exit(0)
+    if not task_str and not args.interactive and not args.ui and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.skills_catalog:
+        # A experiência principal é conversacional: `kawa` sem argumentos abre a TUI.
+        args.ui = True
 
     try:
         if args.ui:
@@ -379,7 +377,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary)
+            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())))
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:

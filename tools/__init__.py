@@ -131,7 +131,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -224,4 +224,10 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, qu
             "adversary_simulate",
             lambda target_path=".": adversary.simulate(target_path),
             "Simula ameaças (OWASP Top 10 e MITRE ATT&CK) e gera recomendações preventivas de hardening. Input: {target_path: '.'}"
+        )
+    if skill_builder:
+        agent.register_tool(
+            "skill_materialize",
+            lambda source_path, skill_name=None, output_dir=None: skill_builder.build(source_path, skill_name, output_dir),
+            "Estrutura material local fornecido pelo usuário em um pacote SKILL.md com capítulos dentro do workspace. Input: {source_path: 'docs/manual.md', skill_name: 'manual'}"
         )

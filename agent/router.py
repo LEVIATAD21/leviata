@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from enum import Enum
 
+from agent.language import routing_text
+
 
 class TaskRoute(str, Enum):
     KNOWLEDGE = "knowledge"
@@ -25,7 +27,7 @@ class TaskRouter:
     )
 
     def route(self, task: str) -> TaskRoute:
-        normalized = " ".join(task.lower().split())
+        normalized = routing_text(task)
         if any(marker in normalized for marker in self.operational_markers):
             return TaskRoute.AGENT
         if any(marker in normalized for marker in self.knowledge_markers):

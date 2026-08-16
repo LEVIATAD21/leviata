@@ -12,6 +12,8 @@ from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
 from ui.service import UICommand
 from agent.orchestrator import TaskOrchestrator
+from agent.language import normalize_user_message, routing_text
+from agent.skill_builder import SkillBuilder
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
@@ -55,6 +57,16 @@ class ToolPolicyTests(unittest.TestCase):
     def test_proactive_policy_allows_design_brief(self):
         policy = ToolPolicy("proactive", self.workspace)
         self.assertEqual(policy.decide("design_brief", {"request": "Site de estudos"}).decision, Decision.ALLOW)
+
+    def test_skill_materialize_respects_policy(self):
+        self.assertEqual(
+            ToolPolicy("observe", self.workspace).decide("skill_materialize", {"source_path": "manual.md"}).decision,
+            Decision.DENY,
+        )
+        self.assertEqual(
+            ToolPolicy("proactive", self.workspace).decide("skill_materialize", {"source_path": "manual.md"}).decision,
+            Decision.ALLOW,
+        )
 
     def test_sensitive_files_blocked_even_inside_workspace(self):
         policy = ToolPolicy("proactive", self.workspace)
@@ -270,6 +282,22 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(command.name, "skills")
         self.assertIsNone(UICommand.parse("crie um plano"))
 
+    def test_language_normalizer_handles_informal_and_typo_text(self):
+        normalized = normalize_user_message("vc pesquiza como funciona a seguranca do site")
+        self.assertIn("você", normalized)
+        self.assertIn("pesquisa", normalized)
+        self.assertIn("segurança", normalized)
+        self.assertIn("seguranca", routing_text(normalized))
+
+    def test_skill_builder_creates_local_index_and_chapters(self):
+        source = self.workspace / "manual.md"
+        source.write_text("# Instalação\n\nPasso um.\n\n# Uso\n\nPasso dois.\n", encoding="utf-8")
+        result = SkillBuilder(self.workspace).build(str(source), "manual de teste")
+        output = self.workspace / "kawa-skills" / "manual-de-teste"
+        self.assertIn("2 seção", result)
+        self.assertTrue((output / "SKILL.md").exists())
+        self.assertEqual(len(list((output / "chapters").glob("*.md"))), 2)
+
     def test_orchestrator_selects_capabilities_from_task(self):
         orchestrator = TaskOrchestrator(self.workspace)
         plan = orchestrator.plan("Crie um site seguro e faça auditoria OWASP do código")
@@ -277,6 +305,8 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("design_brief", skills)
         self.assertIn("quality_audit", skills)
         self.assertIn("ethical_pentest", skills)
+        skill_plan = {step.skill for step in orchestrator.plan("transforme meu PDF em uma skill local")}
+        self.assertIn("skill_materialize", skill_plan)
 
     def test_orchestrator_executes_agent_and_writes_workflow_record(self):
         class StubAgent:

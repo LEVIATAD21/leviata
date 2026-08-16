@@ -108,6 +108,7 @@ mkdir -p "$HOME/.local/bin"
 
 cat > "$LAUNCHER" << 'EOF'
 #!/usr/bin/env bash
+# `kawa` é a porta de entrada principal: sem argumentos, abre a TUI.
 exec "$HOME/.kawa-ai/venv/bin/python" "$HOME/.kawa-ai/repo/main.py" "$@"
 EOF
 
@@ -137,9 +138,8 @@ echo -e "\n${GREEN}${BOLD}╔═════════════════
 echo -e "${GREEN}${BOLD}║  KAWA-AI instalado com sucesso!                               ║${NC}"
 echo -e "${GREEN}${BOLD}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo -e "\n${CYAN}Como usar:${NC}"
-echo -e "  ${BOLD}kawa${NC}                         # Inicia o chat interativo"
-echo -e "  ${BOLD}kawa-ui${NC}                      # Abre a interface conversacional local"
-echo -e "  ${BOLD}kawa \"sua tarefa aqui\"${NC}       # Executa uma tarefa direta"
+echo -e "  ${BOLD}kawa${NC}                         # Abre a interface conversacional local"
+echo -e "  ${BOLD}kawa \"sua tarefa aqui\"${NC}       # Executa uma tarefa direta pela linguagem natural"
 echo -e "  ${BOLD}kawa --provider ollama${NC}       # Usa modelos locais (grátis)"
 echo -e "\n${YELLOW}Na primeira execução, o cofre Obsidian será localizado e você poderá configurar o provedor.${NC}"
 echo -e "${YELLOW}Para automação de navegador, o KAWA-AI tenta reutilizar Chromium/Chrome já instalado.${NC}"

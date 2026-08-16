@@ -107,102 +107,21 @@ ollama pull llama3
 
 ## 💬 Como Usar
 
+O fluxo principal é intencionalmente simples: execute apenas `kawa`. Sem argumentos, ele abre a interface conversacional local. Escreva o que você precisa em linguagem natural; o agente interpreta o objetivo, corrige ruídos leves de digitação, escolhe as capacidades necessárias, executa as etapas e apresenta o resultado.
+
 ```bash
-# Chat interativo local
-kawa --interactive
-
-# Tarefa direta
-kawa "crie um script Python que lista todos os arquivos .mp3 na pasta Downloads"
-
-# Permitir edições somente dentro de uma pasta específica
-kawa --policy workspace --workspace ~/Projetos "Revise este projeto"
-
-# Pesquisa que também cria uma nota Markdown no cofre local
-kawa --knowledge "como funciona RAG local" --knowledge-save
-
-# Roteia perguntas factuais para o cérebro de conhecimento e tarefas operacionais para o agente
-kawa --auto-route "como funciona RAG local?"
-
-# Na primeira execução, procura um cofre Obsidian e inicializa o único diário vazio
-kawa --init-obsidian
-
-# Quando houver vários cofres, escolha exatamente um; nunca é criado outro automaticamente
-kawa --obsidian-vault "~/Documents/Meu Cofre" --init-obsidian
-
-# Disponibiliza um Chromium local com perfil isolado para o agente
-kawa --browser --policy ask "Abra https://example.com e leia a página"
-
-# Cria um perfil de navegador persistente, isolado e exclusivo para um serviço
-kawa --browser --browser-service instagram --policy ask "Abra https://instagram.com"
-
-# Lista metadados de conexões; tokens e cookies nunca são exibidos
-kawa --connections
-
-# Salva um token já obtido no canal oficial, sem colocá-lo na linha de comando
-kawa --connection-set-token instagram --connection-scopes "instagram_basic"
-
-# Remove a conexão e o perfil isolado salvos localmente
-kawa --connection-remove instagram
-
-# Mantém uma sessão Google autorizada em um perfil isolado até que você a remova
-kawa --browser --browser-service google --policy ask --interactive
-
-# Assistente único: salva o endpoint, pede a chave de modo oculto e valida leitura sem gravar dados
-kawa --supabase-setup --supabase-endpoint "https://SEU-PROJETO.supabase.co"
-
-# Consulta até três modelos NVIDIA, em sequência, apenas para pesquisa
-kawa --connection-set-token nvidia --connection-scopes "research"
-kawa --nvidia-research "Compare alternativas para um agente local" --nvidia-max-models 3
-
-# Envia explicitamente somente esse relatório ao Supabase configurado
-kawa --nvidia-research "Investigue RAG local" --supabase-store
-
-# Confere endpoint, token e leitura Supabase sem gravar dados
-kawa --supabase-check
-
-# Avança em tarefas locais comuns; ações externas e de alto impacto continuam confirmadas
-kawa --policy proactive --workspace ~/Projetos "Revise e corrija os testes deste projeto"
-
-# Extrai um quadro a cada 5 segundos para investigar um vídeo, sem API externa
-kawa --extract-frames ~/Vídeos/exemplo.mp4 --frame-rate 0.2
-
-# Transcreve mídia localmente quando whisper.cpp e um modelo ggml estiverem instalados
-kawa --transcribe ~/Vídeos/exemplo.mp4 --whisper-model ~/.kawa-ai/models/ggml-base.bin
-
-# Faz auditoria estática defensiva no projeto atual e gera relatório JSON local
-kawa --policy proactive --workspace ~/Projetos/meu-app --quality-audit . --quality-tools ruff,bandit
-
-# Cria brief de design e arquitetura Mermaid editáveis para um produto
-kawa --policy proactive --workspace ~/Projetos/meu-app --design-brief "Painel de estudos com simulados" --design-medium site
-
-# Confirma o escopo de um projeto que você tem autorização para auditar
-kawa --policy proactive --workspace ~/Projetos/meu-app --pentest-init . --pentest-authorized
-
-# Faz revisão aprofundada estática, guarda evidências e lições locais; não testa redes nem serviços externos
-kawa --policy proactive --workspace ~/Projetos/meu-app --pentest-audit . --quality-tools ruff,bandit,semgrep
-
-# Usando um provedor específico
-kawa --provider anthropic --model claude-3-5-sonnet-20241022 "sua tarefa"
-
-# Usando Ollama local
-kawa --provider ollama --model llama3
+kawa
 ```
+
+Você também pode passar uma ordem diretamente, se preferir: `kawa "crie e teste um site de portfólio"`. A interface é o caminho recomendado; configurações avançadas permanecem opcionais e não são necessárias para conversar com o agente.
 
 ---
 
 ## 🛠️ Ferramentas Disponíveis
 
-| Ferramenta | Descrição |
-|---|---|
-| `shell` | Executa qualquer comando no terminal Linux |
-| `read_file` | Lê o conteúdo de qualquer arquivo |
-| `write_file` | Cria ou edita arquivos |
-| `web_search` | Busca informações na web (DuckDuckGo) |
-| `web_fetch` | Acessa uma URL e retorna o conteúdo |
+O agente seleciona automaticamente as ferramentas compatíveis com cada pedido, incluindo terminal, arquivos, pesquisa, navegador isolado, mídia, auditoria, design, pentest autorizado, modelagem de ameaças, memória e materialização local de documentação em skills.
 
-Os modos de política são `observe` (somente consulta), `ask` (padrão; confirma escrita e comandos), `workspace` (permite edições no diretório definido e confirma ações de maior impacto) e `proactive` (avança em tarefas locais rotineiras, mas mantém confirmações para operações externas, irreversíveis ou sensíveis).
-
-### Cérebro de conhecimento
+Os modos de política são `observe` (somente consulta), `ask` (confirma escrita e comandos), `workspace` (permite edições no diretório definido) e `proactive` (avança em tarefas locais rotineiras, mantendo confirmações para ações externas, irreversíveis ou sensíveis).
 
 `--knowledge` ativa um módulo de consulta separado do assistente principal. Ele pergunta o que é, como funciona, quais são os limites e como confirmar o assunto; em seguida, entrega uma síntese baseada na pesquisa. Com `--knowledge-save`, o relatório é registrado como Markdown em `~/.kawa-ai/knowledge/` (ou na pasta definida por `--knowledge-vault`), sem mudar a identidade ou as permissões do KAWA-AI.
 

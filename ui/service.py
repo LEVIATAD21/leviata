@@ -18,6 +18,8 @@ from agent.skills_catalog import SkillsCatalog
 from agent.supabase_memory import SupabaseKnowledgeStore
 from agent.router import TaskRoute, TaskRouter
 from agent.orchestrator import TaskOrchestrator
+from agent.language import normalize_user_message
+from agent.skill_builder import SkillBuilder
 from providers import get_provider
 from tools import register_all_tools, web_search
 
@@ -79,11 +81,13 @@ class ConversationService:
             design=design,
             pentest=pentest,
             adversary=adversary,
+            skill_builder=SkillBuilder(self.workspace),
         )
         return agent, knowledge
 
     def run(self, text: str, plan_mode: bool = False) -> str:
-        message = text.strip()
+        original_message = text.strip()
+        message = normalize_user_message(original_message)
         if not message:
             return "Escreva uma tarefa para começar."
         try:
