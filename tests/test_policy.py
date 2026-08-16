@@ -8,6 +8,7 @@ from agent.design import DesignToolkit
 from agent.media import MediaError, MediaToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
+from agent.environment import EnvironmentInspector
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
@@ -250,6 +251,11 @@ class ToolPolicyTests(unittest.TestCase):
         result = sim.simulate("sim-project")
         self.assertIn("Simulação de adversário concluída", result)
         self.assertTrue(list((target / "kawa-pentest").glob("adversary-simulation-*.json")))
+
+    def test_environment_inspector_returns_dict(self):
+        info = EnvironmentInspector.inspect()
+        self.assertIn("platform", info)
+        self.assertIn("root_privileges", info)
 
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:
