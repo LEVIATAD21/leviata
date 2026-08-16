@@ -17,6 +17,7 @@ from agent.quality import QualityToolkit
 from agent.skills_catalog import SkillsCatalog
 from agent.supabase_memory import SupabaseKnowledgeStore
 from agent.router import TaskRoute, TaskRouter
+from agent.orchestrator import TaskOrchestrator
 from providers import get_provider
 from tools import register_all_tools, web_search
 
@@ -95,7 +96,7 @@ class ConversationService:
                     "Entregue um plano claro, riscos, arquivos envolvidos e critérios de validação.\n\n"
                     + message
                 )
-            return agent.run(message)
+            return TaskOrchestrator(self.workspace).run(message, agent).render()
         except Exception as exc:
             return f"Erro ao executar a conversa local: {str(exc)}"
 

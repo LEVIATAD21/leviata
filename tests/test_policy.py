@@ -11,6 +11,7 @@ from agent.adversary import AdversarySimulation, AdversaryError
 from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
 from ui.service import UICommand
+from agent.orchestrator import TaskOrchestrator
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
@@ -268,6 +269,14 @@ class ToolPolicyTests(unittest.TestCase):
         command = UICommand.parse("/skills")
         self.assertEqual(command.name, "skills")
         self.assertIsNone(UICommand.parse("crie um plano"))
+
+    def test_orchestrator_selects_capabilities_from_task(self):
+        orchestrator = TaskOrchestrator(self.workspace)
+        plan = orchestrator.plan("Crie um site seguro e faça auditoria OWASP do código")
+        skills = {step.skill for step in plan}
+        self.assertIn("design_brief", skills)
+        self.assertIn("quality_audit", skills)
+        self.assertIn("ethical_pentest", skills)
 
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:

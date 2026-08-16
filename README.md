@@ -244,6 +244,10 @@ Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotio
 
 Use `kawa-ui` ou `kawa --ui` para abrir a interface TUI local inspirada em fluxos modernos de agentes de terminal. Ela reúne conversa, modo plano, execução proativa, workspace, memória e catálogo de skills sem abrir servidor externo. `Ctrl+P` alterna entre plano e execução; `Ctrl+L` limpa a sessão; `/skills`, `/status` e `/help` exibem informações locais. A interface usa a biblioteca Python Textual e é instalada pelo `install.sh`.
 
+### Orquestração ponta a ponta
+
+Use `kawa --autonomous "<tarefa>"` para ativar o orquestrador. Ele cria um plano de capacidades, escolhe automaticamente as skills compatíveis com o pedido, pede ao agente que execute e valide as etapas, e grava um registro sanitizado em `kawa-workflows/`. A interface `kawa-ui` já usa esse fluxo por padrão. A seleção automática não ignora política local, escopo de pentest ou confirmações necessárias para operações externas e de alto impacto.
+
 ### Design estruturado
 
 `--design-brief` gera um brief Markdown e um diagrama Mermaid editáveis em `kawa-design/`. Ele é uma etapa local de arquitetura e interface antes de iniciar um site, app, apresentação ou arte visual. Para imagens, vídeos e apresentações em provedores externos, o KAWA-AI continua usando apenas contas conectadas e uma solicitação específica do proprietário.

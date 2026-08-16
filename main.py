@@ -21,6 +21,7 @@ from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
 from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
+from agent.orchestrator import TaskOrchestrator
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore, SupabaseMemoryError
 from agent.knowledge import KnowledgeBrain
@@ -223,6 +224,7 @@ def main():
     parser.add_argument("--tor-proxy", type=str, help="Define proxy SOCKS opcional para requisições de pesquisa, ex: socks5h://127.0.0.1:9050")
     parser.add_argument("--skills-catalog", action="store_true", help="Exibe o catálogo versionado de skills e o resumo de cobertura e sai")
     parser.add_argument("--ui", action="store_true", help="Abre a interface conversacional local do KAWA-AI")
+    parser.add_argument("--autonomous", action="store_true", help="Planeja e executa a tarefa ponta a ponta, escolhendo skills automaticamente")
     
     args = parser.parse_args()
     config = load_config()
@@ -252,7 +254,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.ui and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.skills_catalog:
+    if not task_str and not args.interactive and not args.ui and not args.autonomous and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.skills_catalog:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -377,7 +379,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media if args.media else None, quality=quality if args.quality else None, design=design if args.design else None, pentest=pentest if args.pentest else None, adversary=adversary if args.adversary else None)
+            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:
@@ -390,10 +392,10 @@ def main():
                         print(f"\n{Colors.BLUE}{Colors.BOLD}Cérebro de conhecimento:{Colors.RESET}\n"
                               f"{knowledge_brain.inquire(prompt, persist=True)}\n")
                         continue
-                    result = agent.run(prompt)
+                    result = TaskOrchestrator(config.get("workspace", Path.cwd())).run(prompt, agent).render() if args.autonomous else agent.run(prompt)
                     print(f"\n{Colors.BLUE}{Colors.BOLD}KAWA-AI:{Colors.RESET}\n{result}\n")
             else:
-                result = agent.run(task_str)
+                result = TaskOrchestrator(config.get("workspace", Path.cwd())).run(task_str, agent).render() if args.autonomous else agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")
 
     except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, PentestError, AdversaryError, VoiceError, RagError) as e:
