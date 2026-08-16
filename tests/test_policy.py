@@ -6,6 +6,7 @@ from agent.audit import AuditLogger
 from agent.connections import ConnectionStore
 from agent.design import DesignToolkit
 from agent.media import MediaError, MediaToolkit
+from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
@@ -56,6 +57,10 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(policy.decide("write_file", {"path": ".bashrc"}).decision, Decision.DENY)
         self.assertEqual(policy.decide("write_file", {"path": ".ssh/authorized_keys"}).decision, Decision.DENY)
         self.assertEqual(policy.decide("write_file", {"path": ".env"}).decision, Decision.DENY)
+
+    def test_proactive_policy_allows_ethical_pentest(self):
+        policy = ToolPolicy("proactive", self.workspace)
+        self.assertEqual(policy.decide("ethical_pentest", {"target_path": "."}).decision, Decision.ALLOW)
 
     def test_high_impact_shell_requires_confirmation(self):
         policy = ToolPolicy("workspace", self.workspace)
@@ -219,6 +224,19 @@ class ToolPolicyTests(unittest.TestCase):
         files = list((self.workspace / "kawa-design").rglob("*"))
         self.assertTrue(any(item.name == "design-brief.md" for item in files))
         self.assertTrue(any(item.suffix == ".mmd" for item in files))
+
+    def test_ethical_pentest_requires_scope_and_records_lessons(self):
+        target = self.workspace / "authorized-project"
+        target.mkdir()
+        (target / "app.py").write_text("DEBUG = True\n", encoding="utf-8")
+        quality = QualityToolkit(self.workspace, finder=lambda _: None)
+        pentest = EthicalPentestToolkit(self.workspace, quality=quality)
+        with self.assertRaises(PentestError):
+            pentest.audit("authorized-project")
+        pentest.initialize_scope("authorized-project", authorized=True)
+        result = pentest.audit("authorized-project", ["ruff"])
+        self.assertIn("Achados locais: 1", result)
+        self.assertTrue((target / "kawa-pentest" / "lessons.jsonl").exists())
 
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:

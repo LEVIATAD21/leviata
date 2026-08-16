@@ -96,6 +96,13 @@ class ToolPolicy:
                 return PolicyResult(Decision.ALLOW, "Brief de design local permitido no modo proativo.")
             return PolicyResult(Decision.ASK, "A criação de arquivos de design requer confirmação neste modo.")
 
+        if tool_name == "ethical_pentest":
+            if self.mode is PolicyMode.OBSERVE:
+                return PolicyResult(Decision.DENY, "O modo observe bloqueia criação de relatórios de pentest.")
+            if self.mode is PolicyMode.PROACTIVE:
+                return PolicyResult(Decision.ALLOW, "Pentest ético local permitido quando houver escopo autorizado.")
+            return PolicyResult(Decision.ASK, "A auditoria ética requer confirmação neste modo.")
+
         if tool_name == "write_file":
             path = str(tool_input.get("path", ""))
             if not path or not self._inside_workspace(path):

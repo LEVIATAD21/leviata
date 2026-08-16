@@ -131,7 +131,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -212,4 +212,10 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, qu
             "design_brief",
             lambda request, medium="produto-digital": design.create_brief(request, medium),
             "Cria brief de design e diagrama Mermaid editáveis dentro do diretório de trabalho. Input: {request: '...', medium: 'site'}"
+        )
+    if pentest:
+        agent.register_tool(
+            "ethical_pentest",
+            lambda target_path=".", tools=None: pentest.audit(target_path, tools),
+            "Audita somente um projeto local já autorizado pelo arquivo de escopo; não faz varredura de rede, exploração ou ataque de credenciais. Input: {target_path: '.', tools: ['ruff', 'bandit', 'semgrep']}"
         )

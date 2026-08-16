@@ -175,6 +175,12 @@ kawa --policy proactive --workspace ~/Projetos/meu-app --quality-audit . --quali
 # Cria brief de design e arquitetura Mermaid editáveis para um produto
 kawa --policy proactive --workspace ~/Projetos/meu-app --design-brief "Painel de estudos com simulados" --design-medium site
 
+# Confirma o escopo de um projeto que você tem autorização para auditar
+kawa --policy proactive --workspace ~/Projetos/meu-app --pentest-init . --pentest-authorized
+
+# Faz revisão aprofundada estática, guarda evidências e lições locais; não testa redes nem serviços externos
+kawa --policy proactive --workspace ~/Projetos/meu-app --pentest-audit . --quality-tools ruff,bandit,semgrep
+
 # Usando um provedor específico
 kawa --provider anthropic --model claude-3-5-sonnet-20241022 "sua tarefa"
 
@@ -229,6 +235,10 @@ Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotio
 ### Qualidade, programação e segurança defensiva
 
 `--quality-audit` executa verificações estáticas dentro do diretório de trabalho e grava o relatório em `kawa-quality/`. Ruff verifica qualidade e formatação de Python; Bandit procura padrões comuns de segurança em Python; Semgrep executa regras estáticas para código. O módulo não explora sistemas, não realiza varredura de rede e não opera fora do diretório configurado. Instale apenas as ferramentas que quiser usar no ambiente local: `python3 -m pip install ruff bandit semgrep`.
+
+### Pentest ético aprofundado
+
+`--pentest-init` cria um arquivo de escopo local confirmando que o diretório foi autorizado para auditoria. Depois, `--pentest-audit` combina revisão estática local, evidências por regra, relatórios JSON e um diário de lições em `kawa-pentest/lessons.jsonl`. O módulo não faz exploração, ataques de credenciais, persistência, negação de serviço ou varredura de rede. A profundidade vem de repetir o ciclo **escopo → revisão → evidência → correção → nova revisão**, e não de testes fora da autorização.
 
 ### Design estruturado
 

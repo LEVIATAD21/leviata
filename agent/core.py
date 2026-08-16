@@ -31,6 +31,7 @@ Ferramentas disponíveis:
 - media_transcribe: Transcreve mídia por whisper.cpp após confirmação. Input: {"input_path": "..."}
 - quality_audit: Executa lint e auditoria defensiva estática no diretório de trabalho. Input: {"target_path": ".", "tools": ["ruff", "bandit", "semgrep"]}
 - design_brief: Cria brief de design e arquitetura Mermaid editáveis no diretório de trabalho. Input: {"request": "...", "medium": "site"}
+- ethical_pentest: Audita projeto local previamente autorizado por escopo, usando revisão estática, evidências e lições locais. Input: {"target_path": ".", "tools": ["ruff", "bandit", "semgrep"]}
 
 Para usar uma ferramenta, responda EXATAMENTE neste formato JSON:
 <tool_call>
