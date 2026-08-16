@@ -20,6 +20,7 @@ from agent.quality import QualityError, QualityToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
 from agent.environment import EnvironmentInspector
+from agent.skills_catalog import SkillsCatalog
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore, SupabaseMemoryError
 from agent.knowledge import KnowledgeBrain
@@ -220,6 +221,7 @@ def main():
     parser.add_argument("--adversary-simulate", type=str, help="Executa modelagem de ameaças e hardening preventivo em um diretório e sai")
     parser.add_argument("--env-check", action="store_true", help="Exibe diagnóstico de ambiente (Mint vs Termux sem root) e sai")
     parser.add_argument("--tor-proxy", type=str, help="Define proxy SOCKS opcional para requisições de pesquisa, ex: socks5h://127.0.0.1:9050")
+    parser.add_argument("--skills-catalog", action="store_true", help="Exibe o catálogo versionado de skills e o resumo de cobertura e sai")
     
     args = parser.parse_args()
     config = load_config()
@@ -249,7 +251,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check:
+    if not task_str and not args.interactive and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.skills_catalog:
         print(f"{Colors.WARNING}Uso em linha de comando:{Colors.RESET}")
         print(f"  python3 main.py --interactive")
         print(f"  python3 main.py --policy workspace --workspace ~/Projetos \"Revise este projeto\"")
@@ -301,6 +303,9 @@ def main():
             return
         if args.env_check:
             print(json.dumps(EnvironmentInspector.inspect(), ensure_ascii=False, indent=2))
+            return
+        if args.skills_catalog:
+            print(SkillsCatalog.render_report())
             return
         if args.nvidia_research:
             requested = [model.strip() for model in (args.nvidia_models or "").split(",") if model.strip()]

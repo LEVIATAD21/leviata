@@ -9,6 +9,7 @@ from agent.media import MediaError, MediaToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
 from agent.environment import EnvironmentInspector
+from agent.skills_catalog import SkillsCatalog
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
@@ -256,6 +257,11 @@ class ToolPolicyTests(unittest.TestCase):
         info = EnvironmentInspector.inspect()
         self.assertIn("platform", info)
         self.assertIn("root_privileges", info)
+
+    def test_skills_catalog_renders_report(self):
+        report = SkillsCatalog.render_report()
+        self.assertIn("Catálogo de Skills", report)
+        self.assertIn("ethical_pentest", report)
 
     def test_connection_store_returns_token_without_writing_it_to_metadata(self):
         class FakeKeyring:
