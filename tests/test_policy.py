@@ -21,12 +21,12 @@ from agent.skill_builder import SkillBuilder
 from agent.quality import QualityToolkit
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
-from agent.core import SYSTEM_PROMPT
+from agent.core import Agent, SYSTEM_PROMPT
 from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import Decision, ToolPolicy
 from agent.router import TaskRoute, TaskRouter
-from tools import _network_session, _network_settings
+from tools import _network_session, _network_settings, register_all_tools
 from tools.browser import BrowserTool
 
 
@@ -77,6 +77,29 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("cybersecurity_reference", skills)
         self.assertIn("ethical_pentest", skills)
         self.assertLess(skills.index("cybersecurity_reference"), skills.index("ethical_pentest"))
+
+    def test_bancocn_scenario_uses_kawa_catalog_without_external_actions(self):
+        class ScenarioProvider:
+            def __init__(self):
+                self.calls = 0
+
+            def generate(self, system, messages):
+                self.calls += 1
+                if self.calls == 1:
+                    return '<tool_call>\n{"tool":"cybersecurity_reference","input":{"topic":"Banco CN laboratório hardening web","limit":3}}\n</tool_call>'
+                return "Validação concluída: o cenário foi classificado e nenhuma ação externa foi executada."
+
+        audit = AuditLogger(self.workspace / "bancocn-actions.jsonl")
+        agent = Agent(ScenarioProvider(), max_iterations=0, policy=ToolPolicy("observe", self.workspace), audit_logger=audit)
+        register_all_tools(agent, cybersecurity_catalog=CybersecurityReferenceCatalog())
+        result = TaskOrchestrator(self.workspace).run("Teste a segurança do laboratório Banco CN com o KAWA-AI", agent)
+        recorded = audit.log_file.read_text(encoding="utf-8")
+        self.assertIn("Validação concluída", result.answer)
+        self.assertIn("cybersecurity_reference", [step.skill for step in result.steps])
+        self.assertIn("ethical_pentest", [step.skill for step in result.steps])
+        self.assertIn("cybersecurity_reference", recorded)
+        self.assertNotIn('"web_fetch"', recorded)
+        self.assertNotIn('"shell"', recorded)
 
     def test_workspace_allows_internal_write_and_denies_escape(self):
         policy = ToolPolicy("workspace", self.workspace)
