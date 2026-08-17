@@ -40,6 +40,7 @@ class MemoryGovernor:
     """Calcula um orçamento de trabalho local sem modificar o kernel ou a swap."""
 
     LOW_RAM_THRESHOLD_MIB = 12 * 1024
+    SERVER_DETECTION_THRESHOLD_MIB = 16 * 1024
     HIGH_RAM_AGENT_CAP_MIB = 6 * 1024
     MIN_FREE_SYSTEM_MIB = 512
     MIN_WORKER_MIB = 512
@@ -51,11 +52,13 @@ class MemoryGovernor:
     THROTTLED_CONTEXT_CHARS = 2_000
 
     @staticmethod
-    def resolve_profile(profile: str = "auto") -> str:
-        """Escolhe desktop por padrão; servidor só é ativado por declaração explícita."""
+    def resolve_profile(profile: str = "auto", total_mib: int = 0) -> str:
+        """Classifica automaticamente servidor acima de 16 GiB, salvo perfil explícito."""
         requested = (profile or "auto").strip().casefold()
         if requested == "auto":
-            requested = os.environ.get("KAWA_RESOURCE_PROFILE", "desktop").strip().casefold()
+            requested = os.environ.get("KAWA_RESOURCE_PROFILE", "auto").strip().casefold()
+        if requested == "auto":
+            return "server" if total_mib > MemoryGovernor.SERVER_DETECTION_THRESHOLD_MIB else "desktop"
         aliases = {"pc": "desktop", "pessoal": "desktop", "notebook": "desktop", "server": "server", "servidor": "server"}
         resolved = aliases.get(requested, requested)
         if resolved not in {"desktop", "server"}:
@@ -97,7 +100,7 @@ class MemoryGovernor:
         swap_free_mib: int = 0,
         profile: str = "auto",
     ) -> MemoryPlan:
-        resolved_profile = cls.resolve_profile(profile)
+        resolved_profile = cls.resolve_profile(profile, total_mib)
         if total_mib <= 0:
             return MemoryPlan(resolved_profile, 0, max(0, available_mib), max(0, swap_total_mib), max(0, swap_free_mib), 0, 0, 0, 0, 0, 0, cls.THROTTLED_CONTEXT_CHARS, "unavailable", "Não foi possível identificar a memória do dispositivo.")
         requested = max(1, int(workers_requested))

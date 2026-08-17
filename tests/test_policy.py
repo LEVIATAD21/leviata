@@ -453,6 +453,12 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertGreater(plan.system_reserve_mib, 0)
         self.assertEqual(plan.active_workers, 4)
 
+    def test_memory_governor_detects_server_only_above_sixteen_gib(self):
+        desktop = MemoryGovernor.plan_from_metrics(total_mib=16 * 1024, available_mib=16 * 1024, workers_requested=4)
+        server = MemoryGovernor.plan_from_metrics(total_mib=16 * 1024 + 1, available_mib=16 * 1024 + 1, workers_requested=4)
+        self.assertEqual(desktop.profile, "desktop")
+        self.assertEqual(server.profile, "server")
+
     def test_memory_governor_reduces_batch_and_context_under_pressure(self):
         plan = MemoryGovernor.plan_from_metrics(total_mib=8 * 1024, available_mib=1800, workers_requested=4)
         self.assertEqual(plan.status, "reduced")
