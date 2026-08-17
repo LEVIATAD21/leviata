@@ -3,7 +3,7 @@
 ![Loop visual do KAWA-AI](assets/kawa-ai-loop.svg)
 
 <p align="center">
-  <img src="assets/kawa-ai-hero.png" alt="Ilustração do KAWA-AI como agente modular de terminal" width="100%" />
+  <img src="assets/kawa-ai-reference.jpeg" alt="Painel técnico do KAWA-AI com núcleo de orquestração e módulos locais" width="100%" />
 </p>
 
 > Agente de IA Autônomo para Terminal Linux — Desenvolvido por Kawã Silva
