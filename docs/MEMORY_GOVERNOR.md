@@ -11,4 +11,8 @@ Em um dispositivo com 8 GiB, o teto da IA é 4 GiB. Com quatro trabalhadores ati
 
 Antes de iniciar novos trabalhadores, o governador também lê `MemAvailable` no Linux e preserva pelo menos 512 MiB livres. Em pressão de memória, ele reduz a quantidade recomendada de trabalhadores ou bloqueia novos inícios. O resultado é consultivo: provedores externos e processos que não respeitam limites de processo não podem ser limitados fisicamente apenas por Python.
 
-Use `kawa --memory-budget` para consultar o plano real do dispositivo, ou `kawa --memory-budget --memory-workers 4` para ver a divisão para quatro trabalhadores.
+O perfil padrão é `desktop`. Ele protege computador pessoal com a regra de 50% até 12 GiB e teto de 6 GiB acima disso. O perfil `server` só deve ser informado quando a execução ocorrer em servidor: ele libera até 90% da RAM, preservando pelo menos 10% ou 1 GiB para o sistema. Mesmo em servidor, nunca usa literalmente toda a RAM, pois o próprio sistema, cache e processos de infraestrutura precisam de margem.
+
+Quando a memória disponível cai abaixo de 25% da RAM, o KAWA-AI reduz progressivamente o número de trabalhadores, os lotes de conhecimento para 50 itens e a janela de contexto recuperado para 4.000 caracteres. Sob pressão crítica, não inicia novo trabalhador e preserva o histórico no Obsidian; a tarefa pode continuar posteriormente sem perder a linha de raciocínio.
+
+Use `kawa --memory-budget` para consultar o plano real do dispositivo, `kawa --memory-budget --memory-workers 4` para ver a divisão para quatro trabalhadores, ou `kawa --memory-budget --resource-profile server` em um servidor declarado.

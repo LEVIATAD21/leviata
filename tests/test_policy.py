@@ -446,6 +446,20 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(plan.active_workers, 4)
         self.assertEqual(plan.per_worker_mib, 1536)
 
+    def test_memory_governor_server_profile_uses_higher_budget_without_using_all_ram(self):
+        plan = MemoryGovernor.plan_from_metrics(total_mib=32 * 1024, available_mib=32 * 1024, workers_requested=4, profile="server")
+        self.assertEqual(plan.profile, "server")
+        self.assertEqual(plan.agent_budget_mib, 32 * 1024 - (32 * 1024 // 10))
+        self.assertGreater(plan.system_reserve_mib, 0)
+        self.assertEqual(plan.active_workers, 4)
+
+    def test_memory_governor_reduces_batch_and_context_under_pressure(self):
+        plan = MemoryGovernor.plan_from_metrics(total_mib=8 * 1024, available_mib=1800, workers_requested=4)
+        self.assertEqual(plan.status, "reduced")
+        self.assertEqual(plan.recommended_batch_size, 50)
+        self.assertEqual(plan.recommended_context_chars, 4000)
+        self.assertLessEqual(plan.active_workers, 1)
+
     def test_memory_governor_throttles_under_memory_pressure_without_using_swap_as_ram(self):
         plan = MemoryGovernor.plan_from_metrics(total_mib=8 * 1024, available_mib=700, workers_requested=4, swap_total_mib=2048, swap_free_mib=2048)
         self.assertEqual(plan.status, "throttled")

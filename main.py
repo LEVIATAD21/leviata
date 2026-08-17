@@ -233,6 +233,7 @@ def main():
     parser.add_argument("--env-check", action="store_true", help="Exibe diagnóstico de ambiente (Mint vs Termux sem root) e sai")
     parser.add_argument("--memory-budget", action="store_true", help="Exibe orçamento adaptativo de RAM para o KAWA-AI sem alterar RAM ou swap")
     parser.add_argument("--memory-workers", type=int, default=4, help="Número máximo desejado de trabalhadores para dividir o orçamento de memória")
+    parser.add_argument("--resource-profile", choices=["auto", "desktop", "server"], default="auto", help="Perfil de recursos; servidor só deve ser usado em host declarado para execução contínua")
     parser.add_argument("--tor-proxy", type=str, help="Define proxy SOCKS opcional para requisições de pesquisa, ex: socks5h://127.0.0.1:9050")
     parser.add_argument("--skills-catalog", action="store_true", help="Exibe o catálogo versionado de skills e o resumo de cobertura e sai")
     parser.add_argument("--ui", action="store_true", help="Abre a interface conversacional local do KAWA-AI")
@@ -324,7 +325,7 @@ def main():
             print(json.dumps(EnvironmentInspector.inspect(), ensure_ascii=False, indent=2))
             return
         if args.memory_budget:
-            print(memory_governor.render(args.memory_workers))
+            print(memory_governor.render(args.memory_workers, args.resource_profile))
             return
         if args.skills_catalog:
             print(SkillsCatalog.render_report())
@@ -338,7 +339,11 @@ def main():
             return
         if args.knowledge_campaign_plan:
             knowledge_campaign.initialize()
-            print(json.dumps(knowledge_campaign.preview_batch(args.knowledge_campaign_plan, args.knowledge_campaign_size), ensure_ascii=False, indent=2))
+            resource_plan = memory_governor.plan(args.memory_workers, args.resource_profile)
+            safe_size = min(args.knowledge_campaign_size, resource_plan.recommended_batch_size)
+            preview = knowledge_campaign.preview_batch(args.knowledge_campaign_plan, safe_size)
+            preview["resource_plan"] = resource_plan.as_dict()
+            print(json.dumps(preview, ensure_ascii=False, indent=2))
             return
         if args.nvidia_research:
             requested = [model.strip() for model in (args.nvidia_models or "").split(",") if model.strip()]
@@ -351,7 +356,10 @@ def main():
             print(report)
             return
 
-        memory = resolve_obsidian_memory(args, config)
+        runtime_config = dict(config)
+        resource_plan = memory_governor.plan(args.memory_workers, args.resource_profile)
+        runtime_config["memory_context_chars"] = min(int(config.get("memory_context_chars", 6_000)), resource_plan.recommended_context_chars)
+        memory = resolve_obsidian_memory(args, runtime_config)
         if args.init_obsidian:
             if memory:
                 print("Diário verificado sem criar uma segunda nota.")
