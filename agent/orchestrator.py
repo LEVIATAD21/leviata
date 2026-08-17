@@ -69,6 +69,10 @@ class TaskOrchestrator:
         WorkflowStep("validation", "verificar resultado, evidências e próximos passos antes de encerrar"),
         WorkflowStep("lesson_record", "registrar contexto e resultado em memória local de forma sanitizada"),
     )
+    _COMPILED_RULES = tuple(
+        (tuple(re.compile(rf"\b{re.escape(keyword)}") for keyword in keywords), step)
+        for keywords, step in _RULES
+    )
 
     def __init__(self, workspace: str | Path, record_dir: str | Path | None = None):
         self.workspace = Path(workspace).expanduser().resolve()
@@ -77,8 +81,8 @@ class TaskOrchestrator:
     def plan(self, task: str) -> list[WorkflowStep]:
         normalized = routing_text(task)
         selected: list[WorkflowStep] = [self._BASE_STEPS[0]]
-        for keywords, step in self._RULES:
-            if any(re.search(rf"\b{re.escape(keyword)}", normalized) for keyword in keywords):
+        for patterns, step in self._COMPILED_RULES:
+            if any(pattern.search(normalized) for pattern in patterns):
                 selected.append(step)
         selected.extend(self._BASE_STEPS[1:])
         unique: list[WorkflowStep] = []

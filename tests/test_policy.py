@@ -78,6 +78,12 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("ethical_pentest", skills)
         self.assertLess(skills.index("cybersecurity_reference"), skills.index("ethical_pentest"))
 
+    def test_orchestrator_reuses_compiled_patterns_without_changing_plan(self):
+        first = [step.skill for step in TaskOrchestrator(self.workspace).plan("Faça hardening de uma API Python")]
+        second = [step.skill for step in TaskOrchestrator(self.workspace).plan("Faça hardening de uma API Python")]
+        self.assertEqual(first, second)
+        self.assertTrue(TaskOrchestrator._COMPILED_RULES)
+
     def test_bancocn_scenario_uses_kawa_catalog_without_external_actions(self):
         class ScenarioProvider:
             def __init__(self):

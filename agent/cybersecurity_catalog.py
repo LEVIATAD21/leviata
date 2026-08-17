@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -29,14 +30,34 @@ class CybersecurityReferenceCatalog:
     def __init__(self, index_path: str | Path | None = None):
         self.index_path = Path(index_path) if index_path else Path(__file__).with_name("data") / "anthropic_cybersecurity_index.json"
 
-    def _payload(self) -> dict[str, Any]:
-        if not self.index_path.exists():
-            return {"total_skills": 0, "skills": []}
+    @classmethod
+    @lru_cache(maxsize=8)
+    def _load_index(cls, raw_path: str, modified_ns: int) -> tuple[tuple[tuple[str, str, str, str, str], ...], dict[str, int]]:
+        """Carrega e normaliza o índice uma vez por versão do arquivo."""
         try:
-            payload = json.loads(self.index_path.read_text(encoding="utf-8"))
-            return payload if isinstance(payload, dict) else {"total_skills": 0, "skills": []}
+            payload = json.loads(Path(raw_path).read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
-            return {"total_skills": 0, "skills": []}
+            payload = {"skills": []}
+        skills = payload.get("skills", []) if isinstance(payload, dict) else []
+        counts = {"defensiva": 0, "escopo_autorizado": 0, "restrita": 0}
+        entries: list[tuple[str, str, str, str, str]] = []
+        for item in skills:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name", ""))
+            description = str(item.get("description", ""))
+            path = str(item.get("path", ""))
+            classification = cls.classification(name)
+            counts[classification] += 1
+            entries.append((name, description, path, classification, f"{name} {description}".casefold()))
+        return tuple(entries), counts
+
+    def _index(self) -> tuple[tuple[tuple[str, str, str, str, str], ...], dict[str, int]]:
+        try:
+            modified_ns = self.index_path.stat().st_mtime_ns
+        except OSError:
+            return (), {"defensiva": 0, "escopo_autorizado": 0, "restrita": 0}
+        return self._load_index(str(self.index_path.resolve()), modified_ns)
 
     @classmethod
     def classification(cls, name: str) -> str:
@@ -48,11 +69,7 @@ class CybersecurityReferenceCatalog:
         return "defensiva"
 
     def summary(self) -> dict[str, int | str]:
-        skills = self._payload().get("skills", [])
-        counts = {"defensiva": 0, "escopo_autorizado": 0, "restrita": 0}
-        for item in skills:
-            if isinstance(item, dict):
-                counts[self.classification(str(item.get("name", "")))] += 1
+        skills, counts = self._index()
         return {
             "source": self.source_url,
             "license": self.license_name,
@@ -63,22 +80,16 @@ class CybersecurityReferenceCatalog:
     def search(self, topic: str, include_restricted: bool = False, limit: int = 8) -> dict[str, Any]:
         terms = [term for term in re.findall(r"[\w-]+", topic.casefold()) if len(term) > 2]
         matches: list[dict[str, str]] = []
-        for item in self._payload().get("skills", []):
-            if not isinstance(item, dict):
-                continue
-            name = str(item.get("name", ""))
-            description = str(item.get("description", ""))
-            classification = self.classification(name)
+        for name, description, path, classification, haystack in self._index()[0]:
             if classification == "restrita" and not include_restricted:
                 continue
-            haystack = f"{name} {description}".casefold()
             score = sum(term in haystack for term in terms)
             if score:
                 matches.append({
                     "name": name,
                     "description": description[:280],
                     "classification": classification,
-                    "path": str(item.get("path", "")),
+                    "path": path,
                     "score": str(score),
                 })
         matches.sort(key=lambda entry: (-int(entry["score"]), entry["name"]))
