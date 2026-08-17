@@ -49,6 +49,8 @@ class TaskOrchestrator:
          WorkflowStep("secure_site_cycle", "criar localmente, verificar controles de segurança, registrar evidências e bloquear conclusão se o gate falhar")),
         (("código", "codigo", "python", "typescript", "javascript", "bug", "refator", "teste", "api", "backend"),
          WorkflowStep("quality_audit", "revisar qualidade, dependências e riscos estáticos do código")),
+        (("llm", "rag", "prompt", "genai", "segurança de ia", "seguranca de ia", "agente de ia", "modelo de ia", "machine learning", "aprendizado de máquina", "aprendizado de maquina", "adversarial"),
+         WorkflowStep("ai_security_reference", "consultar referências verificadas de segurança de IA e aplicar os limites de defesa, escopo autorizado e laboratório")),
         (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit", "mitre"),
          WorkflowStep("cybersecurity_reference", "consultar referências classificadas para priorizar defesa e reconhecer exigências de escopo")),
         (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit"),

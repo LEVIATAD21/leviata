@@ -12,6 +12,7 @@ from agent.media import MediaError, MediaToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
 from agent.cybersecurity_catalog import CybersecurityReferenceCatalog
+from agent.ai_security_references import AISecurityReferenceCatalog
 from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
 from ui.service import UICommand
@@ -67,6 +68,16 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("restritas", catalog.render("api", include_restricted=True))
         self.assertEqual(ToolPolicy("observe", self.workspace).decide("cybersecurity_reference", {"topic": "api"}).decision, Decision.ALLOW)
 
+    def test_verified_ai_security_references_are_consultive_and_classified(self):
+        catalog = AISecurityReferenceCatalog()
+        result = catalog.search("prompt injection rag")
+        names = {item["name"] for item in result["matches"]}
+        self.assertIn("OWASP GenAI LLM Top 10 2026", names)
+        self.assertIn("NVIDIA garak", names)
+        self.assertEqual(catalog.summary()["total"], 8)
+        self.assertIn("LABORATORIO_AUTORIZADO", catalog.render("robustez adversarial"))
+        self.assertEqual(ToolPolicy("observe", self.workspace).decide("ai_security_reference", {"topic": "RAG"}).decision, Decision.ALLOW)
+
     def test_vendored_cybersecurity_reference_index_is_loaded_without_executing_skills(self):
         catalog = CybersecurityReferenceCatalog()
         summary = catalog.summary()
@@ -80,6 +91,11 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("cybersecurity_reference", skills)
         self.assertIn("ethical_pentest", skills)
         self.assertLess(skills.index("cybersecurity_reference"), skills.index("ethical_pentest"))
+
+    def test_orchestrator_consults_ai_security_references_for_rag_and_llm_tasks(self):
+        skills = [step.skill for step in TaskOrchestrator(self.workspace).plan("Faça hardening de um agente RAG com LLM")]
+        self.assertIn("ai_security_reference", skills)
+        self.assertIn("cybersecurity_reference", skills)
 
     def test_orchestrator_reuses_compiled_patterns_without_changing_plan(self):
         first = [step.skill for step in TaskOrchestrator(self.workspace).plan("Faça hardening de uma API Python")]

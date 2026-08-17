@@ -179,7 +179,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, memory_governor=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, secure_site=None):
+def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, memory_governor=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, ai_security_references=None, secure_site=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -302,4 +302,10 @@ def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, mem
             "cybersecurity_reference",
             lambda topic, include_restricted=False, limit=8: cybersecurity_catalog.render(topic, include_restricted, limit),
             "Consulta o catálogo local de referências de cibersegurança. É somente leitura: separa referências defensivas, técnicas que exigem escopo autorizado e itens restritos; não executa scripts, scanners ou exploits. Input: {topic: 'hardening de API', include_restricted: false, limit: 8}"
+        )
+    if ai_security_references:
+        agent.register_tool(
+            "ai_security_reference",
+            lambda topic, limit=8: ai_security_references.render(topic, limit),
+            "Consulta referências verificadas de segurança de IA. É somente leitura: separa hardening, avaliação de escopo autorizado e benchmark de laboratório; não instala nem executa scanners ou técnicas adversariais. Input: {topic: 'segurança de RAG', limit: 8}"
         )
