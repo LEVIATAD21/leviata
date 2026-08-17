@@ -75,7 +75,7 @@ class ToolPolicyTests(unittest.TestCase):
         names = {item["name"] for item in result["matches"]}
         self.assertIn("OWASP GenAI LLM Top 10 2026", names)
         self.assertIn("NVIDIA garak", names)
-        self.assertEqual(catalog.summary()["total"], 8)
+        self.assertEqual(catalog.summary()["total"], 12)
         self.assertIn("LABORATORIO_AUTORIZADO", catalog.render("robustez adversarial"))
         self.assertEqual(ToolPolicy("observe", self.workspace).decide("ai_security_reference", {"topic": "RAG"}).decision, Decision.ALLOW)
 

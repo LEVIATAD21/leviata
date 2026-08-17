@@ -38,3 +38,14 @@ Picklescan possui licença MIT e declara detectar ações suspeitas em arquivos 
 | [man3kin3ko/awesome-adversarial-machine-learning](https://github.com/man3kin3ko/awesome-adversarial-machine-learning) | Lista CC0-1.0 de recursos AML, incluindo MITRE ATLAS, ART e CleverHans. | Cobertura já representada por MITRE ATLAS, ART e CleverHans; não requer cópia adicional. |
 
 Essas decisões preservam valor de pesquisa sem transformar coleções de payloads ou métodos de quebra de alinhamento em capacidade operacional do agente.
+
+## Fontes canônicas adicionais aprovadas
+
+| Fonte | Uso no KAWA-AI | Classificação |
+|---|---|---|
+| [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) | Modelo de riscos e mitigação para agentes que planejam, agem e tomam decisões em fluxos complexos. | Defensiva |
+| [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) | Hardening de credenciais, escopos, ferramentas, contexto, telemetria e dependências para ambientes MCP. | Defensiva |
+| [OWASP AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html) | Checklist de menor privilégio, validação de entrada e saída, memória isolada, confirmação de ações de alto impacto e testes adversariais defensivos. | Defensiva |
+| [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) | Governança de riscos ao longo do ciclo de vida, com perfil específico para IA generativa. | Defensiva |
+
+As novas fontes confirmam controles já alinhados à arquitetura do KAWA-AI: política por ferramenta, confirmação de ações sensíveis, registros de auditoria, retenção local de memória e limites adaptativos de recursos. Elas serão incluídas como referências de prioridade quando a tarefa mencionar agentes, MCP, RAG, contexto, memória, ferramentas ou governança.
