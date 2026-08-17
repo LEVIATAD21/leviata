@@ -24,6 +24,7 @@ from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
 from agent.core import Agent, SYSTEM_PROMPT
 from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
+from agent.knowledge_campaign import KnowledgeCampaign
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import Decision, ToolPolicy
 from agent.router import TaskRoute, TaskRouter
@@ -267,6 +268,41 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(len(stored), 1)
         self.assertIn("Registro local", report)
         self.assertIn("Memória local", stored[0].read_text(encoding="utf-8"))
+
+    def test_knowledge_campaign_deduplicates_and_records_evidence_per_batch(self):
+        campaign = KnowledgeCampaign(self.workspace / "campaign")
+        status = campaign.initialize(target_per_domain=3)
+        self.assertEqual(status["domain_count"], 20)
+        preview = campaign.preview_batch("NAT", 2)
+        self.assertEqual(preview["plans"][0]["planned"], 2)
+        candidate = {
+            "domain": "NAT",
+            "subdomain": "biologia",
+            "modality": "recuperação factual",
+            "prompt": "Qual é a unidade básica dos seres vivos?",
+            "expected": "A célula.",
+            "source_url": "https://example.org/biologia",
+        }
+        result = campaign.record_batch("NAT", [candidate, candidate])
+        self.assertEqual(result["accepted"], 1)
+        self.assertEqual(result["rejected"][0]["reason"], "duplicate")
+        self.assertTrue(Path(result["evidence_file"]).exists())
+        self.assertEqual(campaign.status()["validated_total"], 1)
+
+    def test_knowledge_campaign_rejects_untraceable_or_wrong_domain_candidates(self):
+        campaign = KnowledgeCampaign(self.workspace / "campaign")
+        campaign.initialize(target_per_domain=2)
+        invalid = {
+            "domain": "CMP",
+            "subdomain": "algoritmos",
+            "modality": "aplicação",
+            "prompt": "Explique uma busca.",
+            "expected": "Resposta.",
+            "source_url": "http://example.org/inseguro",
+        }
+        result = campaign.record_batch("NAT", [invalid])
+        self.assertEqual(result["accepted"], 0)
+        self.assertEqual(result["rejected"][0]["reason"], "domain_mismatch")
 
     def test_router_sends_explanations_to_knowledge_and_actions_to_agent(self):
         router = TaskRouter()

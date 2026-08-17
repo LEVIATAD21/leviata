@@ -28,6 +28,7 @@ from agent.skill_builder import SkillBuilder
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore, SupabaseMemoryError
 from agent.knowledge import KnowledgeBrain
+from agent.knowledge_campaign import KnowledgeCampaign, KnowledgeCampaignError
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import ToolPolicy
 from agent.router import TaskRoute, TaskRouter
@@ -175,6 +176,11 @@ def main():
     parser.add_argument("--interactive", action="store_true", help="Abre conversa local interativa")
     parser.add_argument("--knowledge", type=str, help="Consulta um assunto pelo módulo de conhecimento")
     parser.add_argument("--knowledge-save", action="store_true", help="Salva a consulta no cofre local Markdown")
+    parser.add_argument("--knowledge-campaign-init", action="store_true", help="Inicializa localmente a campanha auditável de conhecimento por lotes")
+    parser.add_argument("--knowledge-campaign-status", action="store_true", help="Exibe a cobertura e os lotes válidos da campanha de conhecimento")
+    parser.add_argument("--knowledge-campaign-plan", type=str, help="Planeja um lote sem gerar conteúdo, por exemplo ALL ou NAT")
+    parser.add_argument("--knowledge-campaign-size", type=int, default=250, help="Tamanho planejado do lote de conhecimento (1 a 1000)")
+    parser.add_argument("--knowledge-campaign-root", type=str, help="Pasta local da campanha; padrão ~/.kawa-ai/knowledge-campaign")
     parser.add_argument("--knowledge-vault", type=str, help="Pasta local do cofre de conhecimento")
     parser.add_argument("--auto-route", action="store_true", help="Envia perguntas factuais ao cérebro de conhecimento")
     parser.add_argument("--obsidian-vault", type=str, help="Seleciona explicitamente o único cofre Obsidian")
@@ -257,7 +263,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.ui and not args.knowledge and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.skills_catalog:
+    if not task_str and not args.interactive and not args.ui and not args.knowledge and not args.knowledge_campaign_init and not args.knowledge_campaign_status and not args.knowledge_campaign_plan and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.skills_catalog:
         # A experiência principal é conversacional: `kawa` sem argumentos abre a TUI.
         args.ui = True
 
@@ -272,6 +278,7 @@ def main():
         pentest = EthicalPentestToolkit(config.get("workspace", Path.cwd()), quality=quality)
         adversary = AdversarySimulation(config.get("workspace", Path.cwd()))
         secure_site = SecureSiteCycle(config.get("workspace", Path.cwd()))
+        knowledge_campaign = KnowledgeCampaign(args.knowledge_campaign_root)
         if args.extract_frames:
             print(media.extract_frames(args.extract_frames, args.frame_rate))
             return
@@ -314,6 +321,17 @@ def main():
             return
         if args.skills_catalog:
             print(SkillsCatalog.render_report())
+            return
+        if args.knowledge_campaign_init:
+            print(json.dumps(knowledge_campaign.initialize(), ensure_ascii=False, indent=2))
+            return
+        if args.knowledge_campaign_status:
+            knowledge_campaign.initialize()
+            print(knowledge_campaign.render_status())
+            return
+        if args.knowledge_campaign_plan:
+            knowledge_campaign.initialize()
+            print(json.dumps(knowledge_campaign.preview_batch(args.knowledge_campaign_plan, args.knowledge_campaign_size), ensure_ascii=False, indent=2))
             return
         if args.nvidia_research:
             requested = [model.strip() for model in (args.nvidia_models or "").split(",") if model.strip()]
@@ -380,7 +398,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())), cybersecurity_catalog=CybersecurityReferenceCatalog(), secure_site=secure_site)
+            register_all_tools(agent, knowledge_brain=knowledge_brain, knowledge_campaign=knowledge_campaign, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())), cybersecurity_catalog=CybersecurityReferenceCatalog(), secure_site=secure_site)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:
@@ -399,7 +417,7 @@ def main():
                 result = TaskOrchestrator(config.get("workspace", Path.cwd())).run(task_str, agent).render() if args.autonomous else agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")
 
-    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, PentestError, AdversaryError, SecureSiteError, VoiceError, RagError) as e:
+    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, PentestError, AdversaryError, SecureSiteError, KnowledgeCampaignError, VoiceError, RagError) as e:
         print(f"{Colors.FAIL}Erro de integração: {str(e)}{Colors.RESET}")
         sys.exit(1)
     except Exception as e:

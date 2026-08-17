@@ -179,7 +179,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, secure_site=None):
+def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, secure_site=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -211,6 +211,12 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, qu
             "knowledge_inquiry",
             lambda topic: knowledge_brain.inquire(topic, persist=True),
             "Investiga e registra um assunto por perguntas e fontes, sem executar comandos. Input: {topic: '...'}"
+        )
+    if knowledge_campaign:
+        agent.register_tool(
+            "knowledge_campaign",
+            lambda domain="ALL", batch_size=250: knowledge_campaign.preview_batch(domain, batch_size),
+            "Planeja ou consulta um lote local da campanha de conhecimento. Não acessa rede, não gera conteúdo e não altera o contador de itens validados. Input: {domain: 'NAT' ou 'ALL', batch_size: 250}"
         )
     if browser:
         agent.register_tool(
