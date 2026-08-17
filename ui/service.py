@@ -1,4 +1,4 @@
-"""Serviço conversacional que liga a interface TUI ao núcleo do KAWA-AI."""
+"""Serviço conversacional que liga a interface TUI ao núcleo do Leviatã."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Memória persistente do KAWA-AI em um único cofre Obsidian."""
+"""Memória persistente do Leviatã em um único cofre Obsidian."""
 
 from __future__ import annotations
 
@@ -18,9 +18,11 @@ class ObsidianMemoryError(RuntimeError):
 class ObsidianMemory:
     """Gerencia um diário único, somente por acréscimo, dentro de um cofre Obsidian."""
 
-    folder_name = "KAWA-AI"
+    folder_name = "Leviatã"
+    legacy_folder_name = "KAWA-AI"
     diary_name = "Reasoning Diary.md"
-    manifest_name = ".kawa-ai-manifest.json"
+    manifest_name = ".leviata-manifest.json"
+    legacy_manifest_name = ".kawa-ai-manifest.json"
     ignored_dirs = {
         ".git", "node_modules", ".cache", ".local", "__pycache__", ".venv",
         "proc", "sys", "dev", "run", "tmp",
@@ -95,7 +97,7 @@ class ObsidianMemory:
         try:
             return json.loads(self.manifest_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            raise ObsidianMemoryError("Manifesto do KAWA-AI inválido ou inacessível.") from exc
+            raise ObsidianMemoryError("Manifesto do Leviatã inválido ou inacessível.") from exc
 
     def _validate_manifest(self) -> dict:
         manifest = self._read_manifest()
@@ -110,6 +112,19 @@ class ObsidianMemory:
         """Cria apenas o diário canônico vazio; chamadas posteriores apenas o reutilizam."""
         if not (self.vault_path / ".obsidian").is_dir():
             raise ObsidianMemoryError("O caminho selecionado não contém .obsidian e não é um cofre Obsidian válido.")
+
+        legacy_folder = self.vault_path / self.legacy_folder_name
+        if not self.folder.exists() and legacy_folder.exists():
+            try:
+                legacy_folder.rename(self.folder)
+                legacy_manifest = self.folder / self.legacy_manifest_name
+                if legacy_manifest.exists():
+                    manifest = json.loads(legacy_manifest.read_text(encoding="utf-8"))
+                    manifest["diary_path"] = self._canonical(self.diary_path)
+                    self._atomic_write(self.manifest_path, json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+                    legacy_manifest.unlink(missing_ok=True)
+            except (OSError, json.JSONDecodeError) as exc:
+                raise ObsidianMemoryError("Não foi possível migrar o diário KAWA-AI existente para Leviatã sem risco de duplicação.") from exc
 
         if self.manifest_path.exists():
             self._validate_manifest()

@@ -1,4 +1,4 @@
-"""Catálogo versionado de skills, validação contínua de capacidades e mapeamento de cobertura do KAWA-AI."""
+"""Catálogo versionado de skills, validação contínua de capacidades e mapeamento de cobertura do Leviatã."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ class SkillsCatalog:
     def render_report(cls) -> str:
         data = cls.summary()
         lines = [
-            f"=== Catálogo de Skills do KAWA-AI ===",
+            f"=== Catálogo de Skills do Leviatã ===",
             f"Cobertura: {data['implemented_skills']}/{data['total_skills']} ({data['coverage_percentage']}%)\n",
         ]
         for name, meta in data["skills"].items():

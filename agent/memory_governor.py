@@ -1,4 +1,4 @@
-"""Orçamento adaptativo de memória para o KAWA-AI.
+"""Orçamento adaptativo de memória para o Leviatã.
 
 O módulo não particiona fisicamente a RAM e não altera a swap do dispositivo.
 Ele calcula um limite operacional conservador para reduzir pressão de memória e
@@ -136,7 +136,7 @@ class MemoryGovernor:
             batch_size,
             context_chars,
             "reduced" if under_pressure else "ready",
-            "Carga do KAWA-AI reduzida gradualmente por pressão de memória; RAM e swap não foram particionadas nem alteradas." if under_pressure else "Orçamento consultivo: a RAM e a swap não foram particionadas nem alteradas.",
+            "Carga do Leviatã reduzida gradualmente por pressão de memória; RAM e swap não foram particionadas nem alteradas." if under_pressure else "Orçamento consultivo: a RAM e a swap não foram particionadas nem alteradas.",
         )
 
     @classmethod
@@ -148,7 +148,7 @@ class MemoryGovernor:
     def render(cls, workers_requested: int = 4, profile: str = "auto") -> str:
         plan = cls.plan(workers_requested, profile)
         return (
-            "=== Orçamento de memória KAWA-AI ===\n"
+            "=== Orçamento de memória Leviatã ===\n"
             f"Perfil: {plan.profile}\n"
             f"RAM total: {plan.total_mib} MiB | disponível agora: {plan.available_mib} MiB\n"
             f"Orçamento da IA: {plan.agent_budget_mib} MiB | reserva do sistema: {plan.system_reserve_mib} MiB\n"

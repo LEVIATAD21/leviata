@@ -33,7 +33,7 @@ class MediaToolkit:
 
     def _output_dir(self, source: Path, kind: str) -> Path:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        directory = self.workspace / "kawa-media" / kind / f"{source.stem}-{stamp}"
+        directory = self.workspace / "leviata-media" / kind / f"{source.stem}-{stamp}"
         directory.mkdir(parents=True, exist_ok=False)
         return directory
 
@@ -92,7 +92,7 @@ class MediaToolkit:
     def transcribe(self, input_path: str, model_path: str | None = None) -> str:
         source = self._resolve_source(input_path)
         binary = self._whisper_binary()
-        model = Path(model_path or os.environ.get("KAWA_WHISPER_MODEL", Path.home() / ".kawa-ai" / "models" / "ggml-base.bin")).expanduser()
+        model = Path(model_path or os.environ.get("LEVIATA_WHISPER_MODEL") or os.environ.get("KAWA_WHISPER_MODEL", Path.home() / ".leviata-ai" / "models" / "ggml-base.bin")).expanduser()
         if not model.is_file():
             raise MediaError(
                 f"Modelo whisper.cpp não encontrado: {model}. Defina KAWA_WHISPER_MODEL para um arquivo ggml existente."

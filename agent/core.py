@@ -21,7 +21,7 @@ def _load_diretrizes() -> str:
     except OSError:
         return ""
 
-SYSTEM_PROMPT = """Você é o KAWA-AI, um assistente local de terminal Linux orientado a ferramentas.
+SYSTEM_PROMPT = """Você é o Leviatã, um assistente local de terminal Linux orientado a ferramentas.
 Você pensa por etapas, usa somente as ferramentas registradas e descreve limites ou falhas com clareza.
 As ferramentas passam por uma política local: uma chamada pode ser bloqueada ou precisar de confirmação.
 

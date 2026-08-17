@@ -127,7 +127,7 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(result["status"], "passed")
         self.assertEqual(result["publication"], "not_performed")
         self.assertTrue((target / "index.html").exists())
-        self.assertTrue((target / "kawa-secure-cycle").exists())
+        self.assertTrue((target / "leviata-secure-cycle").exists())
         self.assertEqual(ToolPolicy("observe", self.workspace).decide("secure_site_cycle", {}).decision, Decision.DENY)
         self.assertEqual(ToolPolicy("proactive", self.workspace).decide("secure_site_cycle", {}).decision, Decision.ALLOW)
 
@@ -163,7 +163,7 @@ class ToolPolicyTests(unittest.TestCase):
         recorded = audit.log_file.read_text(encoding="utf-8")
         self.assertIn("Site preparado", result.answer)
         self.assertIn("secure_site_cycle", recorded)
-        self.assertTrue((self.workspace / "kawa-secure-sites" / "site-referencia-local" / "kawa-secure-cycle").exists())
+        self.assertTrue((self.workspace / "leviata-secure-sites" / "site-referencia-local" / "leviata-secure-cycle").exists())
 
     def test_bancocn_scenario_uses_kawa_catalog_without_external_actions(self):
         class ScenarioProvider:
@@ -179,7 +179,7 @@ class ToolPolicyTests(unittest.TestCase):
         audit = AuditLogger(self.workspace / "bancocn-actions.jsonl")
         agent = Agent(ScenarioProvider(), max_iterations=0, policy=ToolPolicy("observe", self.workspace), audit_logger=audit)
         register_all_tools(agent, cybersecurity_catalog=CybersecurityReferenceCatalog())
-        result = TaskOrchestrator(self.workspace).run("Teste a segurança do laboratório Banco CN com o KAWA-AI", agent)
+        result = TaskOrchestrator(self.workspace).run("Teste a segurança do laboratório Banco CN com o Leviatã", agent)
         recorded = audit.log_file.read_text(encoding="utf-8")
         self.assertIn("Validação concluída", result.answer)
         self.assertIn("cybersecurity_reference", [step.skill for step in result.steps])
@@ -347,7 +347,7 @@ class ToolPolicyTests(unittest.TestCase):
         second = memory.initialize()
         self.assertEqual(first, second)
         self.assertEqual(first.read_text(encoding="utf-8"), "")
-        self.assertEqual(list((vault / "KAWA-AI").glob("*Reasoning Diary*.md")), [first])
+        self.assertEqual(list((vault / "Leviatã").glob("*Reasoning Diary*.md")), [first])
 
     def test_obsidian_memory_appends_and_recovers_recent_context(self):
         vault = self.workspace / "vault"
@@ -363,7 +363,7 @@ class ToolPolicyTests(unittest.TestCase):
 
     def test_obsidian_memory_refuses_to_create_a_second_diary_without_manifest(self):
         vault = self.workspace / "vault"
-        diary = vault / "KAWA-AI" / "Reasoning Diary.md"
+        diary = vault / "Leviatã" / "Reasoning Diary.md"
         (vault / ".obsidian").mkdir(parents=True)
         diary.parent.mkdir()
         diary.write_text("registro existente", encoding="utf-8")
@@ -425,13 +425,13 @@ class ToolPolicyTests(unittest.TestCase):
         result = toolkit.audit(".", ["ruff", "bandit"])
         self.assertIn("ruff: not_installed", result)
         self.assertIn("bandit: not_installed", result)
-        self.assertTrue((workspace / "kawa-quality").exists())
+        self.assertTrue((workspace / "leviata-quality").exists())
 
     def test_design_brief_creates_editable_markdown_and_mermaid(self):
         toolkit = DesignToolkit(self.workspace)
         result = toolkit.create_brief("Painel de estudos", "site")
         self.assertIn("Brief criado", result)
-        files = list((self.workspace / "kawa-design").rglob("*"))
+        files = list((self.workspace / "leviata-design").rglob("*"))
         self.assertTrue(any(item.name == "design-brief.md" for item in files))
         self.assertTrue(any(item.suffix == ".mmd" for item in files))
         brief = next(item for item in files if item.name == "design-brief.md")
@@ -448,7 +448,7 @@ class ToolPolicyTests(unittest.TestCase):
         pentest.initialize_scope("authorized-project", authorized=True)
         result = pentest.audit("authorized-project", ["ruff"])
         self.assertIn("Achados locais: 1", result)
-        self.assertTrue((target / "kawa-pentest" / "lessons.jsonl").exists())
+        self.assertTrue((target / "leviata-pentest" / "lessons.jsonl").exists())
 
     def test_adversary_simulation_generates_report(self):
         target = self.workspace / "sim-project"
@@ -456,7 +456,7 @@ class ToolPolicyTests(unittest.TestCase):
         sim = AdversarySimulation(self.workspace)
         result = sim.simulate("sim-project")
         self.assertIn("Simulação de adversário concluída", result)
-        self.assertTrue(list((target / "kawa-pentest").glob("adversary-simulation-*.json")))
+        self.assertTrue(list((target / "leviata-pentest").glob("adversary-simulation-*.json")))
 
     def test_environment_inspector_returns_dict(self):
         info = EnvironmentInspector.inspect()
@@ -524,7 +524,7 @@ class ToolPolicyTests(unittest.TestCase):
         source = self.workspace / "manual.md"
         source.write_text("# Instalação\n\nPasso um.\n\n# Uso\n\nPasso dois.\n", encoding="utf-8")
         result = SkillBuilder(self.workspace).build(str(source), "manual de teste")
-        output = self.workspace / "kawa-skills" / "manual-de-teste"
+        output = self.workspace / "leviata-skills" / "manual-de-teste"
         self.assertIn("2 seção", result)
         self.assertTrue((output / "SKILL.md").exists())
         self.assertEqual(len(list((output / "chapters").glob("*.md"))), 2)

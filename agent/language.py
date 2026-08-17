@@ -1,4 +1,4 @@
-"""Normalização conservadora de linguagem natural para o KAWA-AI."""
+"""Normalização conservadora de linguagem natural para o Leviatã."""
 
 from __future__ import annotations
 

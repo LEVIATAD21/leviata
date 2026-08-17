@@ -2,7 +2,7 @@
 
 ## Fontes verificadas
 
-| Referência | Fonte oficial verificada | Uso previsto no KAWA-AI | Classificação inicial |
+| Referência | Fonte oficial verificada | Uso previsto no Leviatã | Classificação inicial |
 |---|---|---|---|
 | MITRE ATLAS | [MITRE ATLAS](https://atlas.mitre.org/) | Modelagem de ameaças e priorização de mitigações em sistemas de IA | Referência; exige seleção defensiva |
 | OWASP GenAI LLM Top 10 | [OWASP GenAI LLM Top 10 2026](https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/) | Checklist de hardening para agentes, LLMs e integrações | Defensiva |
@@ -41,11 +41,11 @@ Essas decisões preservam valor de pesquisa sem transformar coleções de payloa
 
 ## Fontes canônicas adicionais aprovadas
 
-| Fonte | Uso no KAWA-AI | Classificação |
+| Fonte | Uso no Leviatã | Classificação |
 |---|---|---|
 | [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) | Modelo de riscos e mitigação para agentes que planejam, agem e tomam decisões em fluxos complexos. | Defensiva |
 | [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) | Hardening de credenciais, escopos, ferramentas, contexto, telemetria e dependências para ambientes MCP. | Defensiva |
 | [OWASP AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html) | Checklist de menor privilégio, validação de entrada e saída, memória isolada, confirmação de ações de alto impacto e testes adversariais defensivos. | Defensiva |
 | [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) | Governança de riscos ao longo do ciclo de vida, com perfil específico para IA generativa. | Defensiva |
 
-As novas fontes confirmam controles já alinhados à arquitetura do KAWA-AI: política por ferramenta, confirmação de ações sensíveis, registros de auditoria, retenção local de memória e limites adaptativos de recursos. Elas serão incluídas como referências de prioridade quando a tarefa mencionar agentes, MCP, RAG, contexto, memória, ferramentas ou governança.
+As novas fontes confirmam controles já alinhados à arquitetura do Leviatã: política por ferramenta, confirmação de ações sensíveis, registros de auditoria, retenção local de memória e limites adaptativos de recursos. Elas serão incluídas como referências de prioridade quando a tarefa mencionar agentes, MCP, RAG, contexto, memória, ferramentas ou governança.

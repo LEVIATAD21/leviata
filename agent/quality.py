@@ -39,7 +39,7 @@ class QualityToolkit:
 
     def _output_file(self) -> Path:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        directory = self.workspace / "kawa-quality"
+        directory = self.workspace / "leviata-quality"
         directory.mkdir(parents=True, exist_ok=True)
         return directory / f"audit-{stamp}.json"
 

@@ -1,4 +1,4 @@
-"""Política local e explícita para as ferramentas do KAWA-AI."""
+"""Política local e explícita para as ferramentas do Leviatã."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ class ToolPolicy:
 
     _sensitive_names = re.compile(
         r"(^|/)(\.bashrc|\.bash_profile|\.profile|\.zshrc|\.ssh(/|$)|authorized_keys|"
-        r"crontab|sudoers|shadow|passwd|hosts|fstab|\.[\w-]+rc|env|\.env|\.kawa-ai(/|$))",
+        r"crontab|sudoers|shadow|passwd|hosts|fstab|\.[\w-]+rc|env|\.env|\.(?:kawa-ai|leviata-ai)(/|$))",
         re.IGNORECASE,
     )
 

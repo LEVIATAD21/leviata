@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-VOICE_DIR = Path.home() / ".kawa-ai" / "voice"
+VOICE_DIR = Path.home() / ".leviata-ai" / "voice"
 
 
 class VoiceError(RuntimeError):

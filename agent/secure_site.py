@@ -1,4 +1,4 @@
-"""Ciclo local de desenvolvimento seguro para sites criados pelo KAWA-AI.
+"""Ciclo local de desenvolvimento seguro para sites criados pelo Leviatã.
 
 O módulo cria somente um projeto de referência dentro do workspace, aplica
 controles básicos de hardening e registra evidências de verificações estáticas.
@@ -50,7 +50,7 @@ class SecureSiteCycle:
 
     def _target(self, site_name: str) -> Path:
         slug = re.sub(r"[^a-z0-9-]+", "-", site_name.casefold()).strip("-") or "site-seguro"
-        target = (self.workspace / "kawa-secure-sites" / slug).resolve()
+        target = (self.workspace / "leviata-secure-sites" / slug).resolve()
         try:
             target.relative_to(self.workspace)
         except ValueError as exc:
@@ -73,7 +73,7 @@ class SecureSiteCycle:
     <main>
       <p class=\"eyebrow\">Projeto local verificado</p>
       <h1>{title}</h1>
-      <p>Referência estática criada localmente pelo ciclo seguro do KAWA-AI.</p>
+      <p>Referência estática criada localmente pelo ciclo seguro do Leviatã.</p>
     </main>
   </body>
 </html>
@@ -120,7 +120,7 @@ Este site não é publicado pelo ciclo. O servidor de referência escuta somente
         )
 
     def _evidence_dir(self, target: Path) -> Path:
-        path = target / "kawa-secure-cycle"
+        path = target / "leviata-secure-cycle"
         path.mkdir(parents=True, exist_ok=True)
         return path
 
@@ -136,7 +136,7 @@ Este site não é publicado pelo ciclo. O servidor de referência escuta somente
             if not (target / filename).is_file():
                 findings.append({"kind": "missing_required_file", "file": filename, "detail": "Arquivo obrigatório ausente."})
         for item in target.rglob("*"):
-            if "kawa-secure-cycle" in item.parts or not item.is_file() or item.is_symlink():
+            if "leviata-secure-cycle" in item.parts or not item.is_file() or item.is_symlink():
                 continue
             try:
                 text = item.read_text(encoding="utf-8", errors="ignore")

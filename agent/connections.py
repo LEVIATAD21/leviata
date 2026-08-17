@@ -17,13 +17,19 @@ class ConnectionError(RuntimeError):
 class ConnectionStore:
     """Guarda tokens no cofre do sistema e somente metadados em arquivo local privado."""
 
-    keyring_service = "KAWA-AI"
+    keyring_service = "Leviatã"
+    legacy_keyring_service = "KAWA-AI"
 
     def __init__(self, base_dir: str | Path | None = None, credential_backend=None):
-        self.base_dir = Path(base_dir or Path.home() / ".kawa-ai").expanduser()
+        self.base_dir = Path(base_dir or Path.home() / ".leviata-ai").expanduser()
         self.metadata_path = self.base_dir / "connections.json"
         self.profiles_dir = self.base_dir / "browser-profiles"
         self._credential_backend = credential_backend
+        if base_dir is None and not self.metadata_path.exists():
+            legacy_metadata = Path.home() / ".kawa-ai" / "connections.json"
+            if legacy_metadata.exists():
+                self.base_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(legacy_metadata, self.metadata_path)
 
     @staticmethod
     def normalize_service(service: str) -> str:
@@ -39,7 +45,7 @@ class ConnectionStore:
             import keyring
         except ImportError as exc:
             raise ConnectionError(
-                "O cofre de credenciais não está disponível. Reinstale as dependências do KAWA-AI."
+                "O cofre de credenciais não está disponível. Reinstale as dependências do Leviatã."
             ) from exc
         return keyring
 
@@ -83,7 +89,14 @@ class ConnectionStore:
         """Recupera um segredo somente para uso interno; nunca o imprime ou registra."""
         name = self.normalize_service(service)
         try:
-            return self._keyring().get_password(self.keyring_service, name)
+            keyring = self._keyring()
+            token = keyring.get_password(self.keyring_service, name)
+            if token:
+                return token
+            legacy_token = keyring.get_password(self.legacy_keyring_service, name)
+            if legacy_token:
+                keyring.set_password(self.keyring_service, name, legacy_token)
+            return legacy_token
         except Exception as exc:
             raise ConnectionError("Não foi possível ler o cofre de credenciais do sistema.") from exc
 
@@ -131,10 +144,11 @@ class ConnectionStore:
 
     def register_browser_profile(self, service: str) -> Path:
         name = self.normalize_service(service)
-        profile = self.profile_path(name)
-        profile.mkdir(parents=True, exist_ok=True)
         data = self._read_metadata()
         current = data["connections"].get(name, {})
+        previous_profile = current.get("profile_path")
+        profile = Path(previous_profile).expanduser() if isinstance(previous_profile, str) and previous_profile else self.profile_path(name)
+        profile.mkdir(parents=True, exist_ok=True)
         data["connections"][name] = {
             **current,
             "kind": "browser_profile",

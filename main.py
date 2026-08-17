@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-KAWA-AI — Agente de IA Autônomo e Sistema Multiagente para Terminal Linux
-Suporta modo monoagente (ReAct) e modo equipe multiagente com atraso e transcript compartilhado.
-"""
+"""Leviatã — agente local e sistema multiagente para Terminal Linux."""
 import os
 import sys
 import json
@@ -42,7 +39,8 @@ from tools import register_all_tools, web_search
 from tools.voice import VoiceError, listen, record, speak
 from tools.browser import BrowserTool
 
-CONFIG_DIR = Path.home() / ".kawa-ai"
+CONFIG_DIR = Path.home() / ".leviata-ai"
+LEGACY_CONFIG_DIR = Path.home() / ".kawa-ai"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
 class Colors:
@@ -56,17 +54,33 @@ class Colors:
     BOLD = '\033[1m'
     MAGENTA = '\033[95m'
 
+
+def migrate_legacy_config_if_needed():
+    """Reaproveita a configuração anterior quando a instalação ainda não migrou o diretório completo."""
+    if CONFIG_FILE.exists() or not (LEGACY_CONFIG_DIR / "config.json").exists():
+        return
+    try:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        legacy_config = json.loads((LEGACY_CONFIG_DIR / "config.json").read_text(encoding="utf-8"))
+        temp_file = CONFIG_FILE.with_suffix(".tmp")
+        temp_file.write_text(json.dumps(legacy_config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        temp_file.replace(CONFIG_FILE)
+        print(f"{Colors.CYAN}Configuração anterior detectada e copiada para {CONFIG_DIR}.{Colors.RESET}")
+    except (OSError, json.JSONDecodeError):
+        pass
+
 def load_config():
+    migrate_legacy_config_if_needed()
     config = {
         "provider": "ollama",
         "model": "qwen2.5:1.5b",
         "base_url": "http://localhost:11434",
         "policy_mode": "ask",
         "workspace": str(Path.cwd()),
-        "knowledge_vault": str(Path.home() / ".kawa-ai" / "knowledge"),
+        "knowledge_vault": str(CONFIG_DIR / "knowledge"),
         "obsidian_vault": None,
         "memory_context_chars": 6_000,
-        "browser_profile_dir": str(Path.home() / ".kawa-ai" / "browser-profile"),
+        "browser_profile_dir": str(CONFIG_DIR / "browser-profile"),
         "browser_executable": None,
     }
     if CONFIG_FILE.exists():
@@ -108,7 +122,7 @@ def resolve_obsidian_memory(args, config):
             print("Use --obsidian-vault <caminho> para selecionar somente um deles.")
             return None
         else:
-            print(f"{Colors.WARNING}Nenhum cofre Obsidian foi localizado. O KAWA-AI continuará sem memória persistente nesta sessão.{Colors.RESET}")
+            print(f"{Colors.WARNING}Nenhum cofre Obsidian foi localizado. O Leviatã continuará sem memória persistente nesta sessão.{Colors.RESET}")
             return None
     elif args.obsidian_vault:
         selected = str(Path(selected).expanduser().resolve())
@@ -166,7 +180,7 @@ def handle_connections(args):
     return False
 
 def main():
-    parser = argparse.ArgumentParser(description="KAWA-AI: Sistema Multiagente de Terminal")
+    parser = argparse.ArgumentParser(description="Leviatã: sistema multiagente local de terminal")
     parser.add_argument("task", nargs="*", help="Tarefa a ser executada")
     parser.add_argument("--multiagent", action="store_true", help="Ativa a equipe multiagente com debate e atraso de 50s")
     parser.add_argument("--delay", type=int, default=50, help="Atraso em segundos entre cada agente no modo multiagente")
@@ -183,7 +197,7 @@ def main():
     parser.add_argument("--knowledge-campaign-status", action="store_true", help="Exibe a cobertura e os lotes válidos da campanha de conhecimento")
     parser.add_argument("--knowledge-campaign-plan", type=str, help="Planeja um lote sem gerar conteúdo, por exemplo ALL ou NAT")
     parser.add_argument("--knowledge-campaign-size", type=int, default=250, help="Tamanho planejado do lote de conhecimento (1 a 1000)")
-    parser.add_argument("--knowledge-campaign-root", type=str, help="Pasta local da campanha; padrão ~/.kawa-ai/knowledge-campaign")
+    parser.add_argument("--knowledge-campaign-root", type=str, help="Pasta local da campanha; padrão ~/.leviata-ai/knowledge-campaign")
     parser.add_argument("--knowledge-vault", type=str, help="Pasta local do cofre de conhecimento")
     parser.add_argument("--auto-route", action="store_true", help="Envia perguntas factuais ao cérebro de conhecimento")
     parser.add_argument("--obsidian-vault", type=str, help="Seleciona explicitamente o único cofre Obsidian")
@@ -225,7 +239,7 @@ def main():
     parser.add_argument("--voice-duration", type=float, default=8.0, help="Duração da gravação em segundos (padrão 8)")
     parser.add_argument("--voice-say", type=str, help="Fala o texto localmente (Piper) e sai")
     parser.add_argument("--rag", action="store_true", help="Ativa memória semântica local (SQLite + Ollama nomic-embed-text)")
-    parser.add_argument("--rag-db", type=str, default="~/.kawa-ai/rag.sqlite3", help="Arquivo SQLite da memória semântica")
+    parser.add_argument("--rag-db", type=str, default="~/.leviata-ai/rag.sqlite3", help="Arquivo SQLite da memória semântica")
     parser.add_argument("--pentest", action="store_true", help="Registra auditoria ética de projetos locais já autorizados")
     parser.add_argument("--pentest-init", type=str, help="Inicializa o escopo ético para um diretório dentro da área de trabalho")
     parser.add_argument("--pentest-audit", type=str, help="Audita um escopo ético já inicializado e salva evidências locais")
@@ -233,12 +247,12 @@ def main():
     parser.add_argument("--adversary", action="store_true", help="Registra simulação de adversário e modelagem de ameaças OWASP/MITRE")
     parser.add_argument("--adversary-simulate", type=str, help="Executa modelagem de ameaças e hardening preventivo em um diretório e sai")
     parser.add_argument("--env-check", action="store_true", help="Exibe diagnóstico de ambiente (Mint vs Termux sem root) e sai")
-    parser.add_argument("--memory-budget", action="store_true", help="Exibe orçamento adaptativo de RAM para o KAWA-AI sem alterar RAM ou swap")
+    parser.add_argument("--memory-budget", action="store_true", help="Exibe orçamento adaptativo de RAM para o Leviatã sem alterar RAM ou swap")
     parser.add_argument("--memory-workers", type=int, default=4, help="Número máximo desejado de trabalhadores para dividir o orçamento de memória")
-    parser.add_argument("--resource-profile", choices=["auto", "desktop", "server"], default="auto", help="Perfil de recursos; servidor só deve ser usado em host declarado para execução contínua")
+    parser.add_argument("--resource-profile", choices=["auto", "desktop", "server"], default="auto", help="Perfil de recursos; em automático, acima de 16 GiB de RAM usa perfil de servidor")
     parser.add_argument("--tor-proxy", type=str, help="Define proxy SOCKS opcional para requisições de pesquisa, ex: socks5h://127.0.0.1:9050")
     parser.add_argument("--skills-catalog", action="store_true", help="Exibe o catálogo versionado de skills e o resumo de cobertura e sai")
-    parser.add_argument("--ui", action="store_true", help="Abre a interface conversacional local do KAWA-AI")
+    parser.add_argument("--ui", action="store_true", help="Abre a interface conversacional local do Leviatã")
     parser.add_argument("--autonomous", action="store_true", help="Planeja e executa a tarefa ponta a ponta, escolhendo skills automaticamente")
     
     args = parser.parse_args()
@@ -264,13 +278,13 @@ def main():
     if args.browser_executable:
         config["browser_executable"] = args.browser_executable
 
-    print(f"\n{Colors.HEADER}{Colors.BOLD}=== KAWA-AI (Multiagent Terminal System) ==={Colors.RESET}")
+    print(f"\n{Colors.HEADER}{Colors.BOLD}=== LEVIATÃ (Sistema Multiagente Local) ==={Colors.RESET}")
     print(f"  Provedor principal: {Colors.CYAN}{config.get('provider', 'nvidia')}{Colors.RESET}")
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
     if not task_str and not args.interactive and not args.ui and not args.knowledge and not args.knowledge_campaign_init and not args.knowledge_campaign_status and not args.knowledge_campaign_plan and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.memory_budget and not args.skills_catalog:
-        # A experiência principal é conversacional: `kawa` sem argumentos abre a TUI.
+        # A experiência principal é conversacional: `leviata` sem argumentos abre a TUI.
         args.ui = True
 
     try:
@@ -429,7 +443,7 @@ def main():
                               f"{knowledge_brain.inquire(prompt, persist=True)}\n")
                         continue
                     result = TaskOrchestrator(config.get("workspace", Path.cwd())).run(prompt, agent).render() if args.autonomous else agent.run(prompt)
-                    print(f"\n{Colors.BLUE}{Colors.BOLD}KAWA-AI:{Colors.RESET}\n{result}\n")
+                print(f"\n{Colors.BLUE}{Colors.BOLD}Leviatã:{Colors.RESET}\n{result}\n")
             else:
                 result = TaskOrchestrator(config.get("workspace", Path.cwd())).run(task_str, agent).render() if args.autonomous else agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")

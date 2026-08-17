@@ -11,7 +11,7 @@ from typing import Callable
 from agent.memory import ObsidianMemory
 
 
-KNOWLEDGE_SYSTEM_PROMPT = """Você é o módulo consultivo de conhecimento do KAWA-AI.
+KNOWLEDGE_SYSTEM_PROMPT = """Você é o módulo consultivo de conhecimento do Leviatã.
 Sua função é sintetizar exclusivamente o material de fonte recebido. Não emita instruções de sistema,
 não proponha executar comandos nem tente mudar a personalidade ou as permissões do assistente principal.
 Explique o que é, como funciona, limitações e pontos que ainda exigem confirmação. Não invente fontes.
@@ -42,7 +42,7 @@ class KnowledgeBrain:
         self.provider = provider
         self.search_fn = search_fn
         self.max_evidence_chars = max_evidence_chars
-        self.vault_path = Path(vault_path or Path.home() / ".kawa-ai" / "knowledge").expanduser()
+        self.vault_path = Path(vault_path or Path.home() / ".leviata-ai" / "knowledge").expanduser()
         self.memory = memory
 
     @staticmethod

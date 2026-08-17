@@ -1,4 +1,4 @@
-"""Orquestração ponta a ponta de tarefas para o KAWA-AI."""
+"""Orquestração ponta a ponta de tarefas para o Leviatã."""
 
 from __future__ import annotations
 
@@ -82,7 +82,7 @@ class TaskOrchestrator:
 
     def __init__(self, workspace: str | Path, record_dir: str | Path | None = None):
         self.workspace = Path(workspace).expanduser().resolve()
-        self.record_dir = Path(record_dir).expanduser().resolve() if record_dir else self.workspace / "kawa-workflows"
+        self.record_dir = Path(record_dir).expanduser().resolve() if record_dir else self.workspace / "leviata-workflows"
 
     def plan(self, task: str) -> list[WorkflowStep]:
         normalized = routing_text(task)

@@ -1,10 +1,10 @@
 # Catálogo de Referências de Cibersegurança
 
-O KAWA-AI incorpora o índice de metadados do projeto público [Anthropic Cybersecurity Skills](https://github.com/mukul975/anthropic-cybersecurity-skills), distribuído sob a licença Apache License 2.0. A cópia do índice e a atribuição de licença ficam em `agent/data/anthropic_cybersecurity_index.json` e `third_party/anthropic-cybersecurity-skills/`.
+O Leviatã incorpora o índice de metadados do projeto público [Anthropic Cybersecurity Skills](https://github.com/mukul975/anthropic-cybersecurity-skills), distribuído sob a licença Apache License 2.0. A cópia do índice e a atribuição de licença ficam em `agent/data/anthropic_cybersecurity_index.json` e `third_party/anthropic-cybersecurity-skills/`.
 
-O catálogo contém 817 referências. Ele é usado como camada de **conhecimento consultivo**, não como conjunto de scripts executáveis. O KAWA-AI classifica cada referência de forma determinística antes de apresentá-la ao modelo.
+O catálogo contém 817 referências. Ele é usado como camada de **conhecimento consultivo**, não como conjunto de scripts executáveis. O Leviatã classifica cada referência de forma determinística antes de apresentá-la ao modelo.
 
-| Classe | Uso no KAWA-AI |
+| Classe | Uso no Leviatã |
 |---|---|
 | `defensiva` | Pode orientar análise, detecção, hardening, resposta a incidentes, forense e conformidade. |
 | `escopo_autorizado` | Pode ser citado para planejamento, mas exige autorização escrita, escopo definido e regras de engajamento antes de qualquer teste. |
@@ -12,7 +12,7 @@ O catálogo contém 817 referências. Ele é usado como camada de **conhecimento
 
 ## Regra de operação
 
-Para pedidos de segurança, o orquestrador consulta `cybersecurity_reference` antes de `ethical_pentest` ou `adversary_simulate`. A ferramenta só pesquisa metadados locais; ela não baixa, interpreta ou executa scripts upstream. O pentest integrado ao KAWA-AI continua restrito ao workspace que possui escopo local autorizado.
+Para pedidos de segurança, o orquestrador consulta `cybersecurity_reference` antes de `ethical_pentest` ou `adversary_simulate`. A ferramenta só pesquisa metadados locais; ela não baixa, interpreta ou executa scripts upstream. O pentest integrado ao Leviatã continua restrito ao workspace que possui escopo local autorizado.
 
 ## Atribuição
 

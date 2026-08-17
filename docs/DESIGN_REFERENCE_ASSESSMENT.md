@@ -13,7 +13,7 @@ As referências abaixo serão usadas como orientação de processo, acessibilida
 
 ## Conclusão
 
-O ganho principal é metodológico: o KAWA-AI passa a consultar uma biblioteca de princípios de design que exige briefing, sistema de tokens, estados de componentes, contraste, responsividade e critérios de validação. A coleção `awesome-design-md` é especialmente útil por formalizar design em Markdown legível por agentes, mas seus exemplos devem inspirar regras próprias do projeto, nunca reproduzir visual ou marca de terceiros.
+O ganho principal é metodológico: o Leviatã passa a consultar uma biblioteca de princípios de design que exige briefing, sistema de tokens, estados de componentes, contraste, responsividade e critérios de validação. A coleção `awesome-design-md` é especialmente útil por formalizar design em Markdown legível por agentes, mas seus exemplos devem inspirar regras próprias do projeto, nunca reproduzir visual ou marca de terceiros.
 
 ## Referências
 

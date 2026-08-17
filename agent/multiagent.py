@@ -1,5 +1,5 @@
 """
-KAWA-AI Multiagent Orchestrator
+Leviatã Multiagent Orchestrator
 Coordena múltiplos agentes especialistas em sequência, com atraso configurável
 entre as respostas, transcript compartilhado e tomada de decisão colaborativa.
 """
@@ -16,7 +16,7 @@ class AgentSpecialist:
 
     def speak(self, task: str, shared_transcript: List[Dict[str, str]], delay: int = 50) -> str:
         """Especialista analisa o histórico compartilhado e gera sua contribuição."""
-        system_prompt = f"""Você é {self.name}, atuando como {self.role} na equipe de IA autônoma KAWA-AI.
+        system_prompt = f"""Você é {self.name}, atuando como {self.role} na equipe de IA autônoma Leviatã.
 Sua missão é colaborar com outros agentes especialistas para resolver a tarefa do usuário do início ao fim.
 Você tem acesso ao histórico de tudo o que os outros agentes já disseram (transcript compartilhado).
 Analise o que foi dito, critique se necessário, construa sobre as ideias anteriores e decida os próximos passos sob a sua especialidade.
@@ -57,7 +57,7 @@ class MultiAgentOrchestrator:
 
     def run_workflow(self, task: str) -> str:
         """Executa o pipeline colaborativo sequencial entre os agentes especialistas."""
-        print(f"\n🚀 [KAWA-AI Multiagent] Iniciando pipeline colaborativo para a tarefa: '{task}'")
+        print(f"\n🚀 [Leviatã Multiagente] Iniciando pipeline colaborativo para a tarefa: '{task}'")
         print(f"👥 Equipe com {len(self.specialists)} especialistas. Atraso entre turnos: {self.delay}s.\n")
 
         self.transcript = []

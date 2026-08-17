@@ -2,7 +2,7 @@
 
 ## Finalidade
 
-Esta matriz organiza a cobertura de conhecimento do KAWA-AI sem tratar volume como sinônimo de qualidade. Cada item de teste deve ter domínio, subdomínio, habilidade, fonte ou base de referência, modalidade, resposta ou critério esperado, resultado, versão e assinatura de deduplicação. Um item só conta para a meta depois de passar pelas verificações de validade estrutural, unicidade e avaliação independente.
+Esta matriz organiza a cobertura de conhecimento do Leviatã sem tratar volume como sinônimo de qualidade. Cada item de teste deve ter domínio, subdomínio, habilidade, fonte ou base de referência, modalidade, resposta ou critério esperado, resultado, versão e assinatura de deduplicação. Um item só conta para a meta depois de passar pelas verificações de validade estrutural, unicidade e avaliação independente.
 
 > A expressão “todas as áreas” é implementada como uma taxonomia extensível: novos domínios e subdomínios podem ser registrados sem alterar o histórico dos testes já concluídos.
 

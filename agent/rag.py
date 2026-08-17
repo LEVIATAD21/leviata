@@ -1,7 +1,7 @@
 """Memória semântica local (RAG) — embeddings via Ollama local + SQLite.
 
 Sem nenhuma API externa: vetores gerados por nomic-embed-text em localhost
-e armazenados em um banco SQLite próprio do KAWA-AI.
+e armazenados em um banco SQLite próprio do Leviatã.
 """
 
 from __future__ import annotations

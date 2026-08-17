@@ -1,4 +1,4 @@
-"""TUI do KAWA-AI: conversa local inspirada em agentes de terminal modernos."""
+"""TUI do Leviatã: conversa local inspirada em agentes de terminal modernos."""
 
 from __future__ import annotations
 
@@ -10,23 +10,23 @@ from textual import work
 from ui.service import ConversationService, UICommand
 
 
-class KawaTUI(App):
+class LeviataTUI(App):
     """Interface leve: conversa central, contexto à esquerda e estado à direita."""
 
-    TITLE = "KAWA-AI"
-    SUB_TITLE = "Interface local de agente"
+    TITLE = "LEVIATÃ"
+    SUB_TITLE = "Núcleo local de orquestração"
     CSS = """
-    Screen { background: #101317; color: #d7dde6; }
+    Screen { background: #07111f; color: #d8fff7; }
     #layout { height: 1fr; }
-    #sidebar { width: 29; background: #151a20; border-right: solid #26313d; padding: 1 2; }
+    #sidebar { width: 29; background: #0b1d2b; border-right: solid #165166; padding: 1 2; }
     #chat-pane { width: 1fr; padding: 1 2; }
-    #context { width: 31; background: #151a20; border-left: solid #26313d; padding: 1 2; }
-    #chat { height: 1fr; background: #0d1014; border: round #304152; padding: 1; }
-    #prompt { margin-top: 1; border: round #426784; background: #111820; }
-    .section { color: #6fc3df; text-style: bold; margin-top: 1; }
-    .muted { color: #8b98a7; }
-    .mode-plan { color: #f6c453; text-style: bold; }
-    .mode-build { color: #6ee7b7; text-style: bold; }
+    #context { width: 31; background: #0b1d2b; border-left: solid #165166; padding: 1 2; }
+    #chat { height: 1fr; background: #06101a; border: round #267c88; padding: 1; }
+    #prompt { margin-top: 1; border: round #31bca9; background: #0b1d2b; }
+    .section { color: #70f0d2; text-style: bold; margin-top: 1; }
+    .muted { color: #9ac7d0; }
+    .mode-plan { color: #f3c969; text-style: bold; }
+    .mode-build { color: #70f0d2; text-style: bold; }
     """
     BINDINGS = [
         ("ctrl+p", "toggle_plan", "Plano/Execução"),
@@ -44,7 +44,7 @@ class KawaTUI(App):
         yield Header(show_clock=True)
         with Horizontal(id="layout"):
             with Vertical(id="sidebar"):
-                yield Label("KAWA-AI", classes="section")
+                yield Label("LEVIATÃ", classes="section")
                 yield Static("Agente local\nWorkspace, memória e ferramentas sob seu controle.", classes="muted")
                 yield Label("SESSÃO", classes="section")
                 yield Static("Ctrl+P  Plano / Execução\nCtrl+L  Limpar\nCtrl+K  Escrever", classes="muted")
@@ -52,7 +52,7 @@ class KawaTUI(App):
                 yield Static("/skills\n/plan  /build\n/status  /help", classes="muted")
             with Vertical(id="chat-pane"):
                 yield RichLog(id="chat", wrap=True, markup=True, highlight=True)
-                yield Input(placeholder="Converse com KAWA-AI ou use /help…", id="prompt")
+                yield Input(placeholder="Converse com Leviatã ou use /help…", id="prompt")
             with Vertical(id="context"):
                 yield Label("CONTEXTO", classes="section")
                 yield Static(f"Workspace\n{self.service.workspace}", id="workspace", classes="muted")
@@ -66,7 +66,7 @@ class KawaTUI(App):
 
     def on_mount(self) -> None:
         chat = self.query_one("#chat", RichLog)
-        chat.write("[bold #6fc3df]KAWA-AI[/] [dim]• interface local[/]")
+        chat.write("[bold #70f0d2]LEVIATÃ[/] [dim]• núcleo local de orquestração[/]")
         chat.write("Olá. Estou pronto para planejar, criar, revisar e executar tarefas no seu workspace.")
         self.query_one("#prompt", Input).focus()
 
@@ -115,11 +115,11 @@ class KawaTUI(App):
                 return
             local = self.service.local_command(command)
             if local is not None:
-                chat.write(f"[bold #f6c453]KAWA[/]\n{local}")
+                chat.write(f"[bold #f3c969]LEVIATÃ[/]\n{local}")
                 return
         self.history.append(("user", text))
         chat.write(f"[bold #6fc3df]VOCÊ[/]\n{text}")
-        chat.write("[dim]KAWA está analisando…[/]")
+        chat.write("[dim]Leviatã está analisando…[/]")
         self.run_agent(text)
 
     @work(thread=True, exclusive=True)
@@ -129,8 +129,8 @@ class KawaTUI(App):
 
     def _render_result(self, result: str) -> None:
         self.history.append(("assistant", result))
-        self.query_one("#chat", RichLog).write(f"[bold #6ee7b7]KAWA[/]\n{result}")
+        self.query_one("#chat", RichLog).write(f"[bold #70f0d2]LEVIATÃ[/]\n{result}")
 
 
 def run_ui(config: dict, workspace: str | None = None) -> None:
-    KawaTUI(config, workspace).run()
+    LeviataTUI(config, workspace).run()

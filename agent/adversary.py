@@ -1,4 +1,4 @@
-"""Simulação de adversário defensivo, mapeamento MITRE ATT&CK e hardening preventivo para o KAWA-AI."""
+"""Simulação de adversário defensivo, mapeamento MITRE ATT&CK e hardening preventivo para o Leviatã."""
 
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ class AdversarySimulation:
         if not target.exists():
             raise AdversaryError(f"Caminho não encontrado para simulação: {target}")
 
-        base = target / "kawa-pentest"
+        base = target / "leviata-pentest"
         base.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         output_file = base / f"adversary-simulation-{stamp}.json"
@@ -73,7 +73,7 @@ class AdversarySimulation:
                 "1. Executar varredura estática e dependências a cada alteração de código.",
                 "2. Validar que nenhum segredo esteja gravado em texto plano no repositório.",
                 "3. Manter isolamento de processos e cofres locais de credenciais.",
-                "4. Registrar lições aprendidas em kawa-pentest/lessons.jsonl para correção automática em ciclos futuros.",
+                "4. Registrar lições aprendidas em leviata-pentest/lessons.jsonl para correção automática em ciclos futuros.",
             ],
             "status": "completed",
         }

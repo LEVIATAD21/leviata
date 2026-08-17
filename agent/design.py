@@ -26,7 +26,7 @@ class DesignToolkit:
         request = request.strip()
         if not request:
             raise DesignError("Descreva o objetivo do design.")
-        target = self.workspace / "kawa-design" / f"{self._slug(request)}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+        target = self.workspace / "leviata-design" / f"{self._slug(request)}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
         target.mkdir(parents=True, exist_ok=False)
         brief = target / "design-brief.md"
         diagram = target / "information-architecture.mmd"

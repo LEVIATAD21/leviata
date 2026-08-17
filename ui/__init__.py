@@ -1,1 +1,1 @@
-"""Interface local do KAWA-AI."""
+"""Interface local do Leviatã."""

@@ -108,7 +108,7 @@ class CybersecurityReferenceCatalog:
         result = self.search(topic, include_restricted=include_restricted, limit=limit)
         summary = result["summary"]
         lines = [
-            "=== Referências de Cibersegurança do KAWA-AI ===",
+            "=== Referências de Cibersegurança do Leviatã ===",
             f"Fonte: {summary['source']} ({summary['license']})",
             f"Catálogo: {summary['total']} entradas | defensivas: {summary['defensiva']} | escopo autorizado: {summary['escopo_autorizado']} | restritas: {summary['restrita']}",
             f"Consulta: {topic}",

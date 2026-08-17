@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ╔═══════════════════════════════════════════════════════════════╗
-# ║         KAWA-AI - Script de Instalação para Linux            ║
+# ║         Leviatã - Script de Instalação para Linux            ║
 # ║   Uso: curl -fsSL https://raw.githubusercontent.com/         ║
-# ║        LEVIATAD21/manus-clone-ai/master/install.sh | bash    ║
+# ║           LEVIATAD21/leviata/master/install.sh | bash        ║
 # ╚═══════════════════════════════════════════════════════════════╝
 
 set -e
@@ -15,20 +15,21 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-INSTALL_DIR="$HOME/.kawa-ai"
-REPO_URL="https://github.com/LEVIATAD21/manus-clone-ai.git"
+INSTALL_DIR="$HOME/.leviata-ai"
+LEGACY_INSTALL_DIR="$HOME/.kawa-ai"
+REPO_URL="https://github.com/LEVIATAD21/leviata.git"
 REPO_BRANCH="master"
 # PIN opcional: SHA-256 do commit esperado (preencha após revisão manual do código)
 # Ex.: REPO_PINNED_COMMIT="7165d1d..."
 REPO_PINNED_COMMIT=""
 
 # Verificação de integridade: lista de hashes esperados para arquivos críticos do repo
-# Gere com: cd $HOME/.kawa-ai/repo && sha256sum main.py agent/core.py > checksums.txt
+# Gere com: cd $HOME/.leviata-ai/repo && sha256sum main.py agent/core.py > checksums.txt
 CHECKSUMS_FILE="checksums.txt"
 
 echo -e "${CYAN}${BOLD}"
 echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║                  KAWA-AI  Instalador                         ║"
+echo "║                  LEVIATÃ  Instalador                         ║"
 echo "║          Agente de IA Autônomo para Terminal Linux            ║"
 echo "╚═══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
@@ -67,7 +68,7 @@ verify_repo() {
         if (cd "$repo" && sha256sum -c "$CHECKSUMS_FILE" --quiet 2>/dev/null); then
             echo -e "${GREEN}✓ Integridade dos arquivos críticos verificada (sha256)${NC}"
         else
-            echo -e "${RED}✗ Falha na verificação de integridade dos arquivos do KAWA-AI.${NC}"
+            echo -e "${RED}✗ Falha na verificação de integridade dos arquivos do Leviatã.${NC}"
             echo "   Abortando por segurança."
             exit 1
         fi
@@ -78,10 +79,14 @@ verify_repo() {
 }
 
 # Clona ou atualiza o repositório
-echo -e "\n${YELLOW}[2/5] Baixando KAWA-AI...${NC}"
+echo -e "\n${YELLOW}[2/5] Baixando Leviatã...${NC}"
+if [ ! -d "$INSTALL_DIR" ] && [ -d "$LEGACY_INSTALL_DIR" ]; then
+    echo "Migrando dados locais de $LEGACY_INSTALL_DIR para $INSTALL_DIR..."
+    mv "$LEGACY_INSTALL_DIR" "$INSTALL_DIR"
+fi
 if [ -d "$INSTALL_DIR/repo" ]; then
     echo "Atualizando repositório existente..."
-    cd "$INSTALL_DIR/repo" && git pull --ff-only origin "$REPO_BRANCH"
+    cd "$INSTALL_DIR/repo" && git remote set-url origin "$REPO_URL" && git pull --ff-only origin "$REPO_BRANCH"
 else
     mkdir -p "$INSTALL_DIR"
     git clone --branch "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR/repo"
@@ -101,25 +106,31 @@ fi
 "$VENV_DIR/bin/python" -m pip install -r "$INSTALL_DIR/repo/requirements.txt" -q
 echo -e "${GREEN}✓ Ambiente e dependências instalados${NC}"
 
-# Cria o comando global 'kawa'
-echo -e "\n${YELLOW}[4/5] Criando comando 'kawa' no sistema...${NC}"
-LAUNCHER="$HOME/.local/bin/kawa"
+# Cria os comandos globais do Leviatã e aliases de compatibilidade KAWA.
+echo -e "\n${YELLOW}[4/5] Criando comandos do Leviatã no sistema...${NC}"
+LAUNCHER="$HOME/.local/bin/leviata"
 mkdir -p "$HOME/.local/bin"
 
 cat > "$LAUNCHER" << 'EOF'
 #!/usr/bin/env bash
-# `kawa` é a porta de entrada principal: sem argumentos, abre a TUI.
-exec "$HOME/.kawa-ai/venv/bin/python" "$HOME/.kawa-ai/repo/main.py" "$@"
+# `leviata` é a porta de entrada principal: sem argumentos, abre a TUI.
+exec "$HOME/.leviata-ai/venv/bin/python" "$HOME/.leviata-ai/repo/main.py" "$@"
 EOF
 
-UI_LAUNCHER="$HOME/.local/bin/kawa-ui"
+UI_LAUNCHER="$HOME/.local/bin/leviata-ui"
 cat > "$UI_LAUNCHER" << 'EOF'
 #!/usr/bin/env bash
-exec "$HOME/.kawa-ai/venv/bin/python" "$HOME/.kawa-ai/repo/main.py" --ui "$@"
+exec "$HOME/.leviata-ai/venv/bin/python" "$HOME/.leviata-ai/repo/main.py" --ui "$@"
 EOF
 
-chmod +x "$LAUNCHER"
-chmod +x "$UI_LAUNCHER"
+for legacy_command in kawa kawa-ui; do
+    cat > "$HOME/.local/bin/$legacy_command" << 'EOF'
+#!/usr/bin/env bash
+exec "$HOME/.local/bin/leviata" "$@"
+EOF
+done
+
+chmod +x "$LAUNCHER" "$UI_LAUNCHER" "$HOME/.local/bin/kawa" "$HOME/.local/bin/kawa-ui"
 
 # Adiciona ao PATH se necessário
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
@@ -130,17 +141,17 @@ if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     echo -e "${GREEN}✓ PATH atualizado em $SHELL_RC${NC}"
 fi
 
-echo -e "${GREEN}✓ Comando 'kawa' criado${NC}"
+echo -e "${GREEN}✓ Comandos 'leviata' e 'leviata-ui' criados; 'kawa' continua como alias compatível${NC}"
 
 # Finalização
 echo -e "\n${YELLOW}[5/5] Instalação concluída!${NC}"
 echo -e "\n${GREEN}${BOLD}╔═══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║  KAWA-AI instalado com sucesso!                               ║${NC}"
+echo -e "${GREEN}${BOLD}║  Leviatã instalado com sucesso!                               ║${NC}"
 echo -e "${GREEN}${BOLD}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo -e "\n${CYAN}Como usar:${NC}"
-echo -e "  ${BOLD}kawa${NC}                         # Abre a interface conversacional local"
-echo -e "  ${BOLD}kawa \"sua tarefa aqui\"${NC}       # Executa uma tarefa direta pela linguagem natural"
-echo -e "  ${BOLD}kawa --provider ollama${NC}       # Usa modelos locais (grátis)"
+echo -e "  ${BOLD}leviata${NC}                     # Abre a interface conversacional local"
+echo -e "  ${BOLD}leviata \"sua tarefa aqui\"${NC}   # Executa uma tarefa direta pela linguagem natural"
+echo -e "  ${BOLD}leviata --provider ollama${NC}   # Usa modelos locais"
 echo -e "\n${YELLOW}Na primeira execução, o cofre Obsidian será localizado e você poderá configurar o provedor.${NC}"
-echo -e "${YELLOW}Para automação de navegador, o KAWA-AI tenta reutilizar Chromium/Chrome já instalado.${NC}"
+echo -e "${YELLOW}Para automação de navegador, o Leviatã tenta reutilizar Chromium/Chrome já instalado.${NC}"
 echo -e "${YELLOW}Reinicie o terminal ou execute: source ~/.bashrc${NC}\n"

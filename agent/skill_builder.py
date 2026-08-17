@@ -79,7 +79,7 @@ class SkillBuilder:
         text = self._extract(source)
         sections = self._sections(text)
         slug = self._slug(skill_name or source.stem)
-        root = Path(output_dir).expanduser() if output_dir else self.workspace / "kawa-skills" / slug
+        root = Path(output_dir).expanduser() if output_dir else self.workspace / "leviata-skills" / slug
         root = root.resolve()
         try:
             root.relative_to(self.workspace)
@@ -89,7 +89,7 @@ class SkillBuilder:
         index_lines = [
             f"# {skill_name or source.stem}",
             "",
-            "> Pacote local estruturado pelo KAWA-AI a partir de material fornecido pelo usuário.",
+            "> Pacote local estruturado pelo Leviatã a partir de material fornecido pelo usuário.",
             "> O conteúdo não é publicado automaticamente; verifique direitos e privacidade antes de compartilhar.",
             "",
             f"Fonte local: `{source}`",

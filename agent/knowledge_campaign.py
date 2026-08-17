@@ -50,7 +50,7 @@ class KnowledgeCampaign:
     _VALID_URL = re.compile(r"^https://[^\s]+$", re.IGNORECASE)
 
     def __init__(self, root: str | Path | None = None):
-        self.root = Path(root or Path.home() / ".kawa-ai" / "knowledge-campaign").expanduser().resolve()
+        self.root = Path(root or Path.home() / ".leviata-ai" / "knowledge-campaign").expanduser().resolve()
         self.manifest_path = self.root / "campaign.json"
         self.items_path = self.root / "validated-items.jsonl"
         self.batches_dir = self.root / "batches"
@@ -230,7 +230,7 @@ class KnowledgeCampaign:
     def render_status(self) -> str:
         status = self.status()
         lines = [
-            "=== Campanha de conhecimento KAWA-AI ===",
+            "=== Campanha de conhecimento Leviatã ===",
             f"Domínios: {status['domain_count']} | Meta por domínio: {status['target_per_domain']:,}",
             f"Itens validados: {status['validated_total']:,} | Lotes registrados: {status['batches_recorded']}",
         ]

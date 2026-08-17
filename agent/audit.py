@@ -1,8 +1,9 @@
-"""Registro JSONL local de ações executadas pelo KAWA-AI."""
+"""Registro JSONL local de ações executadas pelo Leviatã."""
 
 from __future__ import annotations
 
 import json
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -10,7 +11,11 @@ from typing import Any
 
 class AuditLogger:
     def __init__(self, log_file: str | Path | None = None):
-        self.log_file = Path(log_file or Path.home() / ".kawa-ai" / "logs" / "actions.jsonl")
+        self.log_file = Path(log_file or Path.home() / ".leviata-ai" / "logs" / "actions.jsonl")
+        legacy_log = Path.home() / ".kawa-ai" / "logs" / "actions.jsonl"
+        if log_file is None and not self.log_file.exists() and legacy_log.exists():
+            self.log_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(legacy_log, self.log_file)
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
 
     _JWT_PATTERN = r"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+"
