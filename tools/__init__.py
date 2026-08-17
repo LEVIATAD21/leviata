@@ -179,7 +179,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, secure_site=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -260,6 +260,12 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, qu
             "design_brief",
             lambda request, medium="produto-digital": design.create_brief(request, medium),
             "Cria brief de design e diagrama Mermaid editáveis dentro do diretório de trabalho. Input: {request: '...', medium: 'site'}"
+        )
+    if secure_site:
+        agent.register_tool(
+            "secure_site_cycle",
+            lambda site_name="site-seguro", title=None, maximum_cycles=3: secure_site.run(site_name, title, maximum_cycles),
+            "Cria um site de referência somente local, executa gate estático de segurança, registra evidências e bloqueia conclusão se houver achados. Não publica, não abre portas públicas e não executa ataques de rede. Input: {site_name: 'portfolio', title: 'Meu site', maximum_cycles: 3}"
         )
     if pentest:
         agent.register_tool(

@@ -19,6 +19,7 @@ from agent.orchestrator import TaskOrchestrator
 from agent.language import normalize_user_message, routing_text
 from agent.skill_builder import SkillBuilder
 from agent.quality import QualityToolkit
+from agent.secure_site import SecureSiteCycle
 from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore
 from agent.core import Agent, SYSTEM_PROMPT
@@ -83,6 +84,45 @@ class ToolPolicyTests(unittest.TestCase):
         second = [step.skill for step in TaskOrchestrator(self.workspace).plan("Faça hardening de uma API Python")]
         self.assertEqual(first, second)
         self.assertTrue(TaskOrchestrator._COMPILED_RULES)
+
+    def test_site_request_selects_mandatory_secure_site_cycle(self):
+        skills = [step.skill for step in TaskOrchestrator(self.workspace).plan("Crie um site de portfólio")]
+        self.assertIn("design_brief", skills)
+        self.assertIn("secure_site_cycle", skills)
+
+    def test_secure_site_cycle_creates_local_reference_and_evidence(self):
+        result = json.loads(SecureSiteCycle(self.workspace).run("portfolio-local", "Portfólio Local"))
+        target = Path(result["target"])
+        self.assertEqual(result["status"], "passed")
+        self.assertEqual(result["publication"], "not_performed")
+        self.assertTrue((target / "index.html").exists())
+        self.assertTrue((target / "kawa-secure-cycle").exists())
+        self.assertEqual(ToolPolicy("observe", self.workspace).decide("secure_site_cycle", {}).decision, Decision.DENY)
+        self.assertEqual(ToolPolicy("proactive", self.workspace).decide("secure_site_cycle", {}).decision, Decision.ALLOW)
+
+    def test_secure_site_cycle_blocks_unsafe_dynamic_markup(self):
+        cycle = SecureSiteCycle(self.workspace)
+        result = json.loads(cycle.run("unsafe-local"))
+        target = Path(result["target"])
+        (target / "index.html").write_text("<script>eval('unsafe')</script>", encoding="utf-8")
+        evidence = cycle.verify(target)
+        self.assertEqual(evidence["status"], "blocked")
+        self.assertIn("unsafe_dynamic_execution", {item["kind"] for item in evidence["findings"]})
+
+    def test_site_orchestration_runs_secure_gate_before_model_response(self):
+        class FinalProvider:
+            def generate(self, system, messages):
+                self.messages = messages
+                return "Site preparado após a verificação local."
+
+        audit = AuditLogger(self.workspace / "site-gate-actions.jsonl")
+        agent = Agent(FinalProvider(), max_iterations=0, policy=ToolPolicy("proactive", self.workspace), audit_logger=audit)
+        register_all_tools(agent, secure_site=SecureSiteCycle(self.workspace))
+        result = TaskOrchestrator(self.workspace).run("Crie um site de portfólio", agent)
+        recorded = audit.log_file.read_text(encoding="utf-8")
+        self.assertIn("Site preparado", result.answer)
+        self.assertIn("secure_site_cycle", recorded)
+        self.assertTrue((self.workspace / "kawa-secure-sites" / "site-referencia-local" / "kawa-secure-cycle").exists())
 
     def test_bancocn_scenario_uses_kawa_catalog_without_external_actions(self):
         class ScenarioProvider:

@@ -15,6 +15,7 @@ from agent.memory import ObsidianMemory
 from agent.pentest import EthicalPentestToolkit
 from agent.policy import ToolPolicy
 from agent.quality import QualityToolkit
+from agent.secure_site import SecureSiteCycle
 from agent.skills_catalog import SkillsCatalog
 from agent.supabase_memory import SupabaseKnowledgeStore
 from agent.router import TaskRoute, TaskRouter
@@ -73,6 +74,7 @@ class ConversationService:
         design = DesignToolkit(self.workspace)
         pentest = EthicalPentestToolkit(self.workspace, quality=quality)
         adversary = AdversarySimulation(self.workspace)
+        secure_site = SecureSiteCycle(self.workspace)
         media = MediaToolkit(self.workspace)
         register_all_tools(
             agent,
@@ -84,6 +86,7 @@ class ConversationService:
             adversary=adversary,
             skill_builder=SkillBuilder(self.workspace),
             cybersecurity_catalog=CybersecurityReferenceCatalog(),
+            secure_site=secure_site,
         )
         return agent, knowledge
 

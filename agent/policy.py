@@ -96,12 +96,12 @@ class ToolPolicy:
                 return PolicyResult(Decision.ALLOW, "Materialização de skill local permitida no modo proativo.")
             return PolicyResult(Decision.ASK, "A criação do pacote local requer confirmação neste modo.")
 
-        if tool_name == "design_brief":
+        if tool_name in {"design_brief", "secure_site_cycle"}:
             if self.mode is PolicyMode.OBSERVE:
-                return PolicyResult(Decision.DENY, "O modo observe bloqueia criação de artefatos de design.")
+                return PolicyResult(Decision.DENY, "O modo observe bloqueia criação de artefatos locais.")
             if self.mode is PolicyMode.PROACTIVE:
-                return PolicyResult(Decision.ALLOW, "Brief de design local permitido no modo proativo.")
-            return PolicyResult(Decision.ASK, "A criação de arquivos de design requer confirmação neste modo.")
+                return PolicyResult(Decision.ALLOW, "Criação e verificação local permitidas no modo proativo.")
+            return PolicyResult(Decision.ASK, "A criação e verificação de arquivos locais requer confirmação neste modo.")
 
         if tool_name in {"ethical_pentest", "adversary_simulate"}:
             if self.mode is PolicyMode.OBSERVE:

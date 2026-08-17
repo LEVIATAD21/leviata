@@ -20,6 +20,7 @@ from agent.quality import QualityError, QualityToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
 from agent.cybersecurity_catalog import CybersecurityReferenceCatalog
+from agent.secure_site import SecureSiteCycle, SecureSiteError
 from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
 from agent.orchestrator import TaskOrchestrator
@@ -270,6 +271,7 @@ def main():
         design = DesignToolkit(config.get("workspace", Path.cwd()))
         pentest = EthicalPentestToolkit(config.get("workspace", Path.cwd()), quality=quality)
         adversary = AdversarySimulation(config.get("workspace", Path.cwd()))
+        secure_site = SecureSiteCycle(config.get("workspace", Path.cwd()))
         if args.extract_frames:
             print(media.extract_frames(args.extract_frames, args.frame_rate))
             return
@@ -378,7 +380,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())), cybersecurity_catalog=CybersecurityReferenceCatalog())
+            register_all_tools(agent, knowledge_brain=knowledge_brain, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())), cybersecurity_catalog=CybersecurityReferenceCatalog(), secure_site=secure_site)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:
@@ -397,7 +399,7 @@ def main():
                 result = TaskOrchestrator(config.get("workspace", Path.cwd())).run(task_str, agent).render() if args.autonomous else agent.run(task_str)
                 print(f"\n{Colors.BLUE}{Colors.BOLD}Resultado:{Colors.RESET}\n{result}\n")
 
-    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, PentestError, AdversaryError, VoiceError, RagError) as e:
+    except (ConnectionError, NvidiaResearchError, SupabaseMemoryError, MediaError, QualityError, DesignError, PentestError, AdversaryError, SecureSiteError, VoiceError, RagError) as e:
         print(f"{Colors.FAIL}Erro de integração: {str(e)}{Colors.RESET}")
         sys.exit(1)
     except Exception as e:

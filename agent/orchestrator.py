@@ -45,6 +45,8 @@ class TaskOrchestrator:
     _RULES: tuple[tuple[tuple[str, ...], WorkflowStep], ...] = (
         (("site", "website", "landing", "interface", "frontend", "app", "aplicativo", "dashboard"),
          WorkflowStep("design_brief", "definir arquitetura visual e requisitos antes da implementação")),
+        (("site", "website", "landing", "interface", "frontend", "app", "aplicativo", "dashboard"),
+         WorkflowStep("secure_site_cycle", "criar localmente, verificar controles de segurança, registrar evidências e bloquear conclusão se o gate falhar")),
         (("código", "codigo", "python", "typescript", "javascript", "bug", "refator", "teste", "api", "backend"),
          WorkflowStep("quality_audit", "revisar qualidade, dependências e riscos estáticos do código")),
         (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit", "mitre"),
@@ -111,6 +113,11 @@ class TaskOrchestrator:
 
     def run(self, task: str, agent) -> WorkflowResult:
         steps = self.plan(task)
+        secure_gate = ""
+        if any(step.skill == "secure_site_cycle" for step in steps) and "secure_site_cycle" in agent.tools:
+            # O gate é acionado pelo orquestrador, não deixado somente à decisão do modelo.
+            # A própria política do agente decide se a criação local é permitida, confirmada ou bloqueada.
+            secure_gate = agent._execute_tool("secure_site_cycle", {"site_name": "site-referencia-local"})
         plan_text = "\n".join(f"- {step.skill}: {step.purpose}" for step in steps)
         enriched_task = (
             "Interprete a intenção mesmo com abreviações, erros ortográficos leves ou texto informal. "
@@ -118,6 +125,7 @@ class TaskOrchestrator:
             "registradas que forem necessárias; não espere o usuário pedir cada skill. Respeite a política "
             "local, o workspace e as confirmações obrigatórias. Antes de encerrar, valide o que for possível, "
             "relate evidências, limitações concretas e próximos passos.\n\n"
+            f"Resultado do gate local de site seguro:\n{secure_gate or 'não aplicável'}\n\n"
             f"Plano de capacidades pré-selecionado:\n{plan_text}\n\n"
             f"Pedido do usuário:\n{task}"
         )

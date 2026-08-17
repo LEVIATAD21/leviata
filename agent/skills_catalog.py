@@ -16,6 +16,7 @@ class SkillsCatalog:
         "media_processing": {"status": "implemented", "version": "1.0", "description": "Extração local de quadros via FFmpeg e transcrição via whisper.cpp."},
         "quality_audit": {"status": "implemented", "version": "1.0", "description": "Auditoria estática com Ruff, Bandit e Semgrep dentro do workspace."},
         "design_brief": {"status": "implemented", "version": "1.0", "description": "Briefs estruturados e arquitetura visual em formato Mermaid."},
+        "secure_site_cycle": {"status": "implemented", "version": "1.0", "description": "Ciclo local de criação, gate estático de segurança, evidências e reteste, sem publicação."},
         "ethical_pentest": {"status": "implemented", "version": "1.5", "description": "Revisão estática autorizada, evidências locais e lições verificadas."},
         "adversary_simulation": {"status": "implemented", "version": "1.0", "description": "Modelagem de ameaças OWASP Top 10 e MITRE ATT&CK preventiva."},
         "cybersecurity_reference_catalog": {"status": "implemented", "version": "1.0", "description": "Catálogo consultivo Apache-2.0 com referências classificadas em defensivas, de escopo autorizado e restritas, sem execução automática."},
