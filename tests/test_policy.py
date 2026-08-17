@@ -8,6 +8,7 @@ from pathlib import Path
 from agent.audit import AuditLogger
 from agent.connections import ConnectionStore
 from agent.design import DesignToolkit
+from agent.design_reference_catalog import DesignReferenceCatalog
 from agent.media import MediaError, MediaToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
@@ -78,6 +79,14 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("LABORATORIO_AUTORIZADO", catalog.render("robustez adversarial"))
         self.assertEqual(ToolPolicy("observe", self.workspace).decide("ai_security_reference", {"topic": "RAG"}).decision, Decision.ALLOW)
 
+    def test_design_references_are_consultive_and_require_original_design(self):
+        catalog = DesignReferenceCatalog()
+        result = catalog.search("design system responsivo")
+        names = {item["name"] for item in result["matches"]}
+        self.assertIn("Awesome DESIGN.md", names)
+        self.assertIn("não copie identidade visual", catalog.render("design system"))
+        self.assertEqual(ToolPolicy("observe", self.workspace).decide("design_reference", {"topic": "UX"}).decision, Decision.ALLOW)
+
     def test_vendored_cybersecurity_reference_index_is_loaded_without_executing_skills(self):
         catalog = CybersecurityReferenceCatalog()
         summary = catalog.summary()
@@ -96,6 +105,10 @@ class ToolPolicyTests(unittest.TestCase):
         skills = [step.skill for step in TaskOrchestrator(self.workspace).plan("Faça hardening de um agente RAG com LLM")]
         self.assertIn("ai_security_reference", skills)
         self.assertIn("cybersecurity_reference", skills)
+
+    def test_orchestrator_consults_design_references_for_interface_tasks(self):
+        skills = [step.skill for step in TaskOrchestrator(self.workspace).plan("Crie uma interface acessível para meu app")]
+        self.assertIn("design_reference", skills)
 
     def test_orchestrator_reuses_compiled_patterns_without_changing_plan(self):
         first = [step.skill for step in TaskOrchestrator(self.workspace).plan("Faça hardening de uma API Python")]
@@ -421,6 +434,8 @@ class ToolPolicyTests(unittest.TestCase):
         files = list((self.workspace / "kawa-design").rglob("*"))
         self.assertTrue(any(item.name == "design-brief.md" for item in files))
         self.assertTrue(any(item.suffix == ".mmd" for item in files))
+        brief = next(item for item in files if item.name == "design-brief.md")
+        self.assertIn("Contrato de design local", brief.read_text(encoding="utf-8"))
 
     def test_ethical_pentest_requires_scope_and_records_lessons(self):
         target = self.workspace / "authorized-project"

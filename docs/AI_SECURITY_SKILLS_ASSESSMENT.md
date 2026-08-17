@@ -27,3 +27,14 @@ Picklescan possui licença MIT e declara detectar ações suspeitas em arquivos 
 [^art]: [Trusted AI — Adversarial Robustness Toolbox](https://github.com/Trusted-AI/adversarial-robustness-toolbox)
 [^cleverhans]: [CleverHans Lab — CleverHans](https://github.com/cleverhans-lab/cleverhans)
 [^picklescan]: [Picklescan — scanner de segurança de Pickle](https://github.com/mmaitre314/picklescan)
+
+## Repositórios adicionais recebidos
+
+| Repositório | Evidência verificada | Decisão de integração |
+|---|---|---|
+| [brinhosa/awesome-ai-security](https://github.com/brinhosa/awesome-ai-security) | Lista CC0-1.0 com ferramentas, padrões e recursos de segurança de IA; combina materiais defensivos com payloads e coleções de jailbreak. | Usar somente como índice de descoberta; incorporar apenas fontes oficiais e defensivas verificadas individualmente. |
+| [yueliu1999/Awesome-Jailbreak-on-LLMs](https://github.com/yueliu1999/Awesome-Jailbreak-on-LLMs) | Lista MIT de artigos, códigos e conjuntos de dados para métodos de jailbreak. | Não integrar códigos, payloads, benchmarks ofensivos ou métodos de quebra de alinhamento. Registrar somente a categoria de risco para orientar controles defensivos. |
+| [raj77in/awesome-ai-ml-pentesting](https://github.com/raj77in/awesome-ai-ml-pentesting) | Lista recente e de baixa maturidade declarada, com referências úteis e conteúdo ofensivo. | Não usar como autoridade ou instalar ferramentas listadas; aproveitar apenas referências canônicas já verificadas, como OWASP, MITRE e ferramentas aprovadas. |
+| [man3kin3ko/awesome-adversarial-machine-learning](https://github.com/man3kin3ko/awesome-adversarial-machine-learning) | Lista CC0-1.0 de recursos AML, incluindo MITRE ATLAS, ART e CleverHans. | Cobertura já representada por MITRE ATLAS, ART e CleverHans; não requer cópia adicional. |
+
+Essas decisões preservam valor de pesquisa sem transformar coleções de payloads ou métodos de quebra de alinhamento em capacidade operacional do agente.

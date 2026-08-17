@@ -45,6 +45,8 @@ class TaskOrchestrator:
     _RULES: tuple[tuple[tuple[str, ...], WorkflowStep], ...] = (
         (("site", "website", "landing", "interface", "frontend", "app", "aplicativo", "dashboard"),
          WorkflowStep("design_brief", "definir arquitetura visual e requisitos antes da implementação")),
+        (("site", "website", "landing", "interface", "frontend", "app", "aplicativo", "dashboard", "ux", "ui", "acessibilidade", "design system"),
+         WorkflowStep("design_reference", "consultar referências de UX e design systems para orientar uma solução visual original, acessível e responsiva")),
         (("site", "website", "landing", "interface", "frontend", "app", "aplicativo", "dashboard"),
          WorkflowStep("secure_site_cycle", "criar localmente, verificar controles de segurança, registrar evidências e bloquear conclusão se o gate falhar")),
         (("código", "codigo", "python", "typescript", "javascript", "bug", "refator", "teste", "api", "backend"),

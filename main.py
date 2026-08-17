@@ -16,6 +16,7 @@ from agent.core import Agent
 from agent.connections import ConnectionError, ConnectionStore
 from agent.media import MediaError, MediaToolkit
 from agent.design import DesignError, DesignToolkit
+from agent.design_reference_catalog import DesignReferenceCatalog
 from agent.quality import QualityError, QualityToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
@@ -414,7 +415,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, knowledge_campaign=knowledge_campaign, memory_governor=memory_governor, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())), cybersecurity_catalog=CybersecurityReferenceCatalog(), ai_security_references=AISecurityReferenceCatalog(), secure_site=secure_site)
+            register_all_tools(agent, knowledge_brain=knowledge_brain, knowledge_campaign=knowledge_campaign, memory_governor=memory_governor, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())), cybersecurity_catalog=CybersecurityReferenceCatalog(), ai_security_references=AISecurityReferenceCatalog(), design_references=DesignReferenceCatalog(), secure_site=secure_site)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:
