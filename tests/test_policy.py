@@ -109,6 +109,16 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(evidence["status"], "blocked")
         self.assertIn("unsafe_dynamic_execution", {item["kind"] for item in evidence["findings"]})
 
+    def test_secure_site_cycle_blocks_sensitive_browser_storage_and_records_adversarial_cases(self):
+        cycle = SecureSiteCycle(self.workspace)
+        result = json.loads(cycle.run("storage-local"))
+        target = Path(result["target"])
+        (target / "app.js").write_text("const token = localStorage.getItem('token');", encoding="utf-8")
+        evidence = cycle.verify(target)
+        self.assertEqual(evidence["status"], "blocked")
+        self.assertIn("client_sensitive_storage", {item["kind"] for item in evidence["findings"]})
+        self.assertEqual(len(evidence["adversarial_simulations"]), 4)
+
     def test_site_orchestration_runs_secure_gate_before_model_response(self):
         class FinalProvider:
             def generate(self, system, messages):

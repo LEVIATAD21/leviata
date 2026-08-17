@@ -28,6 +28,18 @@ class SecureSiteCycle:
         ("public_bind", re.compile(r"(?:0\.0\.0\.0|::)")),
         ("embedded_secret", re.compile(r"(?i)(api[_-]?key|secret|password|token)\s*[:=]\s*['\"][^'\"]{8,}")),
     )
+    _adversarial_patterns = (
+        ("client_sensitive_storage", re.compile(r"(?i)(?:localStorage|sessionStorage)\.(?:setItem|getItem)\([^\n]{0,160}(?:token|password|secret|session)"), "Simula abuso de sessão no navegador; não armazene dados sensíveis em localStorage/sessionStorage."),
+        ("insecure_external_resource", re.compile(r"(?i)(?:src|href|action)\s*=\s*['\"]http://"), "Simula interceptação de tráfego; use apenas recursos HTTPS e transporte seguro."),
+        ("permissive_cors", re.compile(r"(?i)access-control-allow-origin[^\n]{0,80}\*"), "Simula abuso entre origens; restrinja CORS aos domínios necessários."),
+        ("missing_rate_limit_contract", re.compile(r"(?i)(?:login|signin|password-reset|redefinir-senha)[^\n]{0,160}"), "Fluxo sensível identificado: confirme limitação de tentativas e mensagens de erro não enumeráveis no backend real."),
+    )
+    _adversarial_scenarios = (
+        ("input_and_template_abuse", "Procura execução dinâmica e injeção HTML que poderiam transformar entrada em código."),
+        ("session_and_secret_exposure", "Procura segredos embutidos e armazenamento inseguro de credenciais ou sessão."),
+        ("transport_and_origin_abuse", "Procura recursos HTTP e configuração permissiva de origem cruzada."),
+        ("public_service_exposure", "Confirma que o servidor de referência não escuta em interfaces públicas."),
+    )
 
     def __init__(self, workspace: str | Path):
         self.workspace = Path(workspace).expanduser().resolve()
@@ -133,6 +145,9 @@ Este site não é publicado pelo ciclo. O servidor de referência escuta somente
             for kind, pattern in self._blocked_patterns:
                 if pattern.search(text):
                     findings.append({"kind": kind, "file": str(item.relative_to(target)), "detail": "Padrão bloqueado pelo ciclo local."})
+            for kind, pattern, remediation in self._adversarial_patterns:
+                if pattern.search(text):
+                    findings.append({"kind": kind, "file": str(item.relative_to(target)), "detail": remediation})
         server = (target / "server.py")
         if server.exists():
             server_text = server.read_text(encoding="utf-8", errors="ignore")
@@ -148,6 +163,14 @@ Este site não é publicado pelo ciclo. O servidor de referência escuta somente
             "status": "passed" if not findings else "blocked",
             "finding_count": len(findings),
             "findings": findings,
+            "adversarial_simulations": [
+                {
+                    "scenario": name,
+                    "purpose": purpose,
+                    "status": "blocked" if findings else "passed",
+                }
+                for name, purpose in self._adversarial_scenarios
+            ],
             "publication": "not_requested_and_not_performed",
         }
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
