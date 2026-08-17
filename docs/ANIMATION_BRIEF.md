@@ -22,7 +22,7 @@ Substituir o loop vetorial atual por uma animação profissional, legível e tec
 | Tempo | Ação visual | Movimento |
 |---|---|---|
 | 00:00–00:02 | Núcleo hexagonal do KAWA-AI surge no centro do painel já aceso, com um brilho ciano estável. | A câmera faz aproximação sutil; o núcleo pulsa uma única vez. |
-| 00:02–00:05 | Uma tarefa abstrata entra pela esquerda e se divide em cinco caminhos para Planejamento, Conhecimento, Segurança, Memória e Execução Local. | Linhas fluem com velocidade moderada, mantendo todos os módulos visíveis. |
+| 00:02–00:05 | Uma tarefa abstrata entra pela esquerda e se divide em cinco caminhos para Planejamento, Conhecimento, Segurança, Memória e Execução Local. Uma constelação de glóbulos orbitais representa consciências especializadas que observam e contribuem ao núcleo. | Linhas fluem com velocidade moderada; cada glóbulo pulsa em ritmo próprio, mantendo todos os módulos visíveis. |
 | 00:05–00:07 | Barras de recursos são distribuídas entre trabalhadores; uma delas reduz suavemente, representando calibragem de memória sem interrupção da tarefa. | O fluxo diminui de ritmo, mas continua seguindo para o núcleo. |
 | 00:07–00:10 | Um escudo discreto fecha ao redor do módulo de segurança e os caminhos retornam ao núcleo, formando a composição inicial. | A câmera recua ao enquadramento inicial, permitindo loop contínuo. |
 

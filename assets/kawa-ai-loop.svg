@@ -13,13 +13,13 @@
       .node{transform-box:fill-box;transform-origin:center;animation:node 4.6s ease-in-out infinite}
       .node:nth-of-type(2){animation-delay:-1.2s}.node:nth-of-type(3){animation-delay:-2.35s}.node:nth-of-type(4){animation-delay:-3.1s}
       .scan{animation:scan 5s ease-in-out infinite}.shield{transform-origin:1018px 493px;animation:shield 5s ease-in-out infinite}.bar{transform-origin:0 0;animation:bar 5s ease-in-out infinite}
-      .halo{transform-origin:688px 390px;animation:halo 5s ease-out infinite}
+      .halo{transform-origin:688px 390px;animation:halo 5s ease-out infinite}.constellation{transform-origin:688px 390px;animation:orbit 18s linear infinite}.consciousness{transform-box:fill-box;transform-origin:center;animation:think 4.4s ease-in-out infinite}.consciousness:nth-child(2){animation-delay:-.6s}.consciousness:nth-child(3){animation-delay:-1.3s}.consciousness:nth-child(4){animation-delay:-2.1s}.consciousness:nth-child(5){animation-delay:-2.8s}.consciousness:nth-child(6){animation-delay:-3.4s}.consciousness:nth-child(7){animation-delay:-4s}.consciousness:nth-child(8){animation-delay:-4.6s}
       @keyframes flow{to{stroke-dashoffset:-200}}@keyframes core{0%,100%{transform:scale(1);opacity:.76}42%{transform:scale(1.16);opacity:1}60%{transform:scale(1.04);opacity:.88}}
       @keyframes node{0%,100%{transform:translateY(0);opacity:.78}45%{transform:translateY(-7px);opacity:1}}
       @keyframes scan{0%,20%{transform:translateX(-190px);opacity:0}35%,62%{opacity:.85}88%,100%{transform:translateX(1320px);opacity:0}}
       @keyframes shield{0%,53%,100%{transform:scale(.86);opacity:.12}68%,86%{transform:scale(1.08);opacity:.82}}
-      @keyframes bar{0%,42%,100%{transform:scaleX(1)}62%,82%{transform:scaleX(.52)}}@keyframes halo{0%{transform:scale(.68);opacity:.7}55%,100%{transform:scale(1.65);opacity:0}}
-      @media(prefers-reduced-motion:reduce){.flow,.flow-slow,.core,.node,.scan,.shield,.bar,.halo{animation:none}}
+      @keyframes bar{0%,42%,100%{transform:scaleX(1)}62%,82%{transform:scaleX(.52)}}@keyframes halo{0%{transform:scale(.68);opacity:.7}55%,100%{transform:scale(1.65);opacity:0}}@keyframes orbit{to{transform:rotate(360deg)}}@keyframes think{0%,100%{transform:scale(.82);opacity:.5}48%{transform:scale(1.17);opacity:1}}
+      @media(prefers-reduced-motion:reduce){.flow,.flow-slow,.core,.node,.scan,.shield,.bar,.halo,.constellation,.consciousness{animation:none}}
     </style>
   </defs>
   <g clip-path="url(#frame)">
@@ -28,6 +28,16 @@
     <path class="scan" d="M-180 660 H1480" stroke="url(#scan)" stroke-width="2" opacity=".56"/>
     <g class="halo"><circle cx="688" cy="390" r="72" fill="none" stroke="#7bfff5" stroke-width="2" opacity=".55"/></g>
     <g class="core"><circle cx="688" cy="390" r="110" fill="url(#core)" opacity=".76"/><circle cx="688" cy="390" r="66" fill="none" stroke="#a5fff8" stroke-width="2" opacity=".78" stroke-dasharray="5 12"/></g>
+    <g class="constellation" fill="none" stroke="#89fff4" stroke-width="1.5" opacity=".62"><circle cx="688" cy="390" r="184" stroke-dasharray="4 18"/><circle cx="688" cy="390" r="236" stroke-dasharray="2 26" opacity=".45"/>
+      <g class="consciousness" transform="translate(688 206)"><circle r="19" fill="#0b2531"/><circle r="10" fill="#9afff6" filter="url(#glow)"/><circle r="19"/></g>
+      <g class="consciousness" transform="translate(819 258)"><circle r="17" fill="#0b2531"/><circle r="8" fill="#93fff2" filter="url(#glow)"/><circle r="17"/></g>
+      <g class="consciousness" transform="translate(872 390)"><circle r="21" fill="#0b2531"/><circle r="11" fill="#c7fffb" filter="url(#glow)"/><circle r="21"/></g>
+      <g class="consciousness" transform="translate(815 530)"><circle r="16" fill="#0b2531"/><circle r="7" fill="#82eee3" filter="url(#glow)"/><circle r="16"/></g>
+      <g class="consciousness" transform="translate(688 574)"><circle r="20" fill="#0b2531"/><circle r="9" fill="#9dfff5" filter="url(#glow)"/><circle r="20"/></g>
+      <g class="consciousness" transform="translate(558 530)"><circle r="17" fill="#0b2531"/><circle r="8" fill="#87f7ed" filter="url(#glow)"/><circle r="17"/></g>
+      <g class="consciousness" transform="translate(503 390)"><circle r="21" fill="#0b2531"/><circle r="10" fill="#b8fff8" filter="url(#glow)"/><circle r="21"/></g>
+      <g class="consciousness" transform="translate(555 255)"><circle r="16" fill="#0b2531"/><circle r="7" fill="#89fff4" filter="url(#glow)"/><circle r="16"/></g>
+    </g>
     <path class="flow" d="M86 390 H370 L500 298 M370 390 L505 435 M698 306 L701 352 M744 414 L916 480 M744 377 L906 300"/>
     <path class="flow-slow" d="M224 540 C420 610 520 630 690 542 C840 466 992 532 1202 434"/>
     <g class="node"><circle cx="505" cy="300" r="7" fill="#9cfff6" filter="url(#glow)"/><circle cx="505" cy="300" r="17" fill="none" stroke="#6ff4e7" opacity=".55"/></g>
