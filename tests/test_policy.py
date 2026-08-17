@@ -1,4 +1,5 @@
 import tempfile
+import json
 import os
 import unittest
 from unittest import mock
@@ -10,6 +11,7 @@ from agent.design import DesignToolkit
 from agent.media import MediaError, MediaToolkit
 from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
+from agent.cybersecurity_catalog import CybersecurityReferenceCatalog
 from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
 from ui.service import UICommand
@@ -48,6 +50,33 @@ class ToolPolicyTests(unittest.TestCase):
         policy = ToolPolicy("observe", self.workspace)
         self.assertEqual(policy.decide("read_file", {"path": "README.md"}).decision, Decision.ALLOW)
         self.assertEqual(policy.decide("write_file", {"path": "note.txt"}).decision, Decision.DENY)
+
+    def test_cybersecurity_reference_is_consultive_and_permitted_in_observe_mode(self):
+        catalog_file = self.workspace / "catalog.json"
+        catalog_file.write_text(json.dumps({"skills": [
+            {"name": "securing-api-gateway", "description": "Hardening defensivo", "path": "skills/securing-api-gateway"},
+            {"name": "exploiting-api-injection-vulnerabilities", "description": "Item restrito", "path": "skills/exploiting-api"},
+        ]}), encoding="utf-8")
+        catalog = CybersecurityReferenceCatalog(catalog_file)
+        default_result = catalog.search("api")
+        self.assertEqual(len(default_result["matches"]), 1)
+        self.assertEqual(default_result["matches"][0]["classification"], "defensiva")
+        self.assertIn("restritas", catalog.render("api", include_restricted=True))
+        self.assertEqual(ToolPolicy("observe", self.workspace).decide("cybersecurity_reference", {"topic": "api"}).decision, Decision.ALLOW)
+
+    def test_vendored_cybersecurity_reference_index_is_loaded_without_executing_skills(self):
+        catalog = CybersecurityReferenceCatalog()
+        summary = catalog.summary()
+        self.assertEqual(summary["total"], 817)
+        self.assertEqual(catalog.classification("securing-api-gateway-with-aws-waf"), "defensiva")
+        self.assertEqual(catalog.classification("testing-api-authentication-weaknesses"), "escopo_autorizado")
+        self.assertEqual(catalog.classification("exploiting-api-injection-vulnerabilities"), "restrita")
+
+    def test_orchestrator_consults_catalog_before_local_security_audit(self):
+        skills = [step.skill for step in TaskOrchestrator(self.workspace).plan("Faça hardening de uma API Python")]
+        self.assertIn("cybersecurity_reference", skills)
+        self.assertIn("ethical_pentest", skills)
+        self.assertLess(skills.index("cybersecurity_reference"), skills.index("ethical_pentest"))
 
     def test_workspace_allows_internal_write_and_denies_escape(self):
         policy = ToolPolicy("workspace", self.workspace)

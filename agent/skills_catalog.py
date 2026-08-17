@@ -18,6 +18,7 @@ class SkillsCatalog:
         "design_brief": {"status": "implemented", "version": "1.0", "description": "Briefs estruturados e arquitetura visual em formato Mermaid."},
         "ethical_pentest": {"status": "implemented", "version": "1.5", "description": "Revisão estática autorizada, evidências locais e lições verificadas."},
         "adversary_simulation": {"status": "implemented", "version": "1.0", "description": "Modelagem de ameaças OWASP Top 10 e MITRE ATT&CK preventiva."},
+        "cybersecurity_reference_catalog": {"status": "implemented", "version": "1.0", "description": "Catálogo consultivo Apache-2.0 com referências classificadas em defensivas, de escopo autorizado e restritas, sem execução automática."},
         "environment_adaptation": {"status": "implemented", "version": "1.0", "description": "Suporte a Linux Mint e Termux sem root com diagnóstico de sistema."},
         "supabase_knowledge": {"status": "implemented", "version": "1.0", "description": "Armazenamento e verificação somente leitura de relatórios em Supabase."},
         "local_rag_and_voice": {"status": "implemented", "version": "1.0", "description": "Memória semântica local com SQLite/Ollama e ferramentas de voz Piper/Vosk."},

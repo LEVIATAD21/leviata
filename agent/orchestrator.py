@@ -47,6 +47,8 @@ class TaskOrchestrator:
          WorkflowStep("design_brief", "definir arquitetura visual e requisitos antes da implementação")),
         (("código", "codigo", "python", "typescript", "javascript", "bug", "refator", "teste", "api", "backend"),
          WorkflowStep("quality_audit", "revisar qualidade, dependências e riscos estáticos do código")),
+        (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit", "mitre"),
+         WorkflowStep("cybersecurity_reference", "consultar referências classificadas para priorizar defesa e reconhecer exigências de escopo")),
         (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit"),
          WorkflowStep("ethical_pentest", "validar apenas o workspace autorizado com evidências e reteste")),
         (("ameaça", "ameaca", "mitre", "adversário", "adversario", "threat model"),

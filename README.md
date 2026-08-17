@@ -190,6 +190,10 @@ Hedra, MiniMax/Hailuo, Photoroom, n8n, NotebookLM Enterprise, Supabase e Remotio
 
 `--pentest-init` cria um arquivo de escopo local confirmando que o diretório foi autorizado para auditoria. Depois, `--pentest-audit` combina revisão estática local, evidências por regra, relatórios JSON e um diário de lições em `kawa-pentest/lessons.jsonl`. O módulo não faz exploração, ataques de credenciais, persistência, negação de serviço ou varredura de rede. A profundidade vem de repetir o ciclo **escopo → revisão → evidência → correção → nova revisão**, e não de testes fora da autorização.
 
+### Referências de cibersegurança
+
+O KAWA-AI inclui um catálogo consultivo de 817 referências de cibersegurança baseado nos metadados do projeto [Anthropic Cybersecurity Skills](https://github.com/mukul975/anthropic-cybersecurity-skills), sob Apache-2.0. Para pedidos de segurança, o agente pesquisa essas referências antes de planejar a ação e as classifica entre **defensivas**, **de escopo autorizado** e **restritas**. O catálogo não executa scripts upstream, não inicia exploração ou scanner de rede e não converte conteúdo restrito em ação automática. Veja `docs/CYBERSECURITY_REFERENCE_CATALOG.md` para atribuição, limites e funcionamento.
+
 ### Interface conversacional local
 
 Use `kawa-ui` ou `kawa --ui` para abrir a interface TUI local inspirada em fluxos modernos de agentes de terminal. Ela reúne conversa, modo plano, execução proativa, workspace, memória e catálogo de skills sem abrir servidor externo. `Ctrl+P` alterna entre plano e execução; `Ctrl+L` limpa a sessão; `/skills`, `/status` e `/help` exibem informações locais. A interface usa a biblioteca Python Textual e é instalada pelo `install.sh`.

@@ -179,7 +179,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None):
+def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -278,4 +278,10 @@ def register_all_tools(agent, knowledge_brain=None, browser=None, media=None, qu
             "skill_materialize",
             lambda source_path, skill_name=None, output_dir=None: skill_builder.build(source_path, skill_name, output_dir),
             "Estrutura material local fornecido pelo usuário em um pacote SKILL.md com capítulos dentro do workspace. Input: {source_path: 'docs/manual.md', skill_name: 'manual'}"
+        )
+    if cybersecurity_catalog:
+        agent.register_tool(
+            "cybersecurity_reference",
+            lambda topic, include_restricted=False, limit=8: cybersecurity_catalog.render(topic, include_restricted, limit),
+            "Consulta o catálogo local de referências de cibersegurança. É somente leitura: separa referências defensivas, técnicas que exigem escopo autorizado e itens restritos; não executa scripts, scanners ou exploits. Input: {topic: 'hardening de API', include_restricted: false, limit: 8}"
         )

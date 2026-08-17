@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from agent.adversary import AdversarySimulation
+from agent.cybersecurity_catalog import CybersecurityReferenceCatalog
 from agent.core import Agent
 from agent.design import DesignToolkit
 from agent.knowledge import KnowledgeBrain
@@ -82,6 +83,7 @@ class ConversationService:
             pentest=pentest,
             adversary=adversary,
             skill_builder=SkillBuilder(self.workspace),
+            cybersecurity_catalog=CybersecurityReferenceCatalog(),
         )
         return agent, knowledge
 
