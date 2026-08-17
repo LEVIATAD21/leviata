@@ -29,6 +29,7 @@ from agent.nvidia_research import NvidiaResearch, NvidiaResearchError
 from agent.supabase_memory import SupabaseKnowledgeStore, SupabaseMemoryError
 from agent.knowledge import KnowledgeBrain
 from agent.knowledge_campaign import KnowledgeCampaign, KnowledgeCampaignError
+from agent.memory_governor import MemoryGovernor
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import ToolPolicy
 from agent.router import TaskRoute, TaskRouter
@@ -230,6 +231,8 @@ def main():
     parser.add_argument("--adversary", action="store_true", help="Registra simulação de adversário e modelagem de ameaças OWASP/MITRE")
     parser.add_argument("--adversary-simulate", type=str, help="Executa modelagem de ameaças e hardening preventivo em um diretório e sai")
     parser.add_argument("--env-check", action="store_true", help="Exibe diagnóstico de ambiente (Mint vs Termux sem root) e sai")
+    parser.add_argument("--memory-budget", action="store_true", help="Exibe orçamento adaptativo de RAM para o KAWA-AI sem alterar RAM ou swap")
+    parser.add_argument("--memory-workers", type=int, default=4, help="Número máximo desejado de trabalhadores para dividir o orçamento de memória")
     parser.add_argument("--tor-proxy", type=str, help="Define proxy SOCKS opcional para requisições de pesquisa, ex: socks5h://127.0.0.1:9050")
     parser.add_argument("--skills-catalog", action="store_true", help="Exibe o catálogo versionado de skills e o resumo de cobertura e sai")
     parser.add_argument("--ui", action="store_true", help="Abre a interface conversacional local do KAWA-AI")
@@ -263,7 +266,7 @@ def main():
     print(f"  Modelo:             {Colors.CYAN}{config.get('model', 'padrão')}{Colors.RESET}\n")
 
     task_str = " ".join(args.task).strip()
-    if not task_str and not args.interactive and not args.ui and not args.knowledge and not args.knowledge_campaign_init and not args.knowledge_campaign_status and not args.knowledge_campaign_plan and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.skills_catalog:
+    if not task_str and not args.interactive and not args.ui and not args.knowledge and not args.knowledge_campaign_init and not args.knowledge_campaign_status and not args.knowledge_campaign_plan and not args.init_obsidian and not args.index_vault and not args.extract_frames and not args.transcribe and not args.voice_listen and not args.voice_say and not args.nvidia_research and not args.supabase_check and not args.supabase_setup and not args.quality_audit and not args.design_brief and not args.pentest_init and not args.pentest_audit and not args.adversary_simulate and not args.env_check and not args.memory_budget and not args.skills_catalog:
         # A experiência principal é conversacional: `kawa` sem argumentos abre a TUI.
         args.ui = True
 
@@ -279,6 +282,7 @@ def main():
         adversary = AdversarySimulation(config.get("workspace", Path.cwd()))
         secure_site = SecureSiteCycle(config.get("workspace", Path.cwd()))
         knowledge_campaign = KnowledgeCampaign(args.knowledge_campaign_root)
+        memory_governor = MemoryGovernor()
         if args.extract_frames:
             print(media.extract_frames(args.extract_frames, args.frame_rate))
             return
@@ -318,6 +322,9 @@ def main():
             return
         if args.env_check:
             print(json.dumps(EnvironmentInspector.inspect(), ensure_ascii=False, indent=2))
+            return
+        if args.memory_budget:
+            print(memory_governor.render(args.memory_workers))
             return
         if args.skills_catalog:
             print(SkillsCatalog.render_report())
@@ -398,7 +405,7 @@ def main():
                 headless=args.browser_headless,
                 executable_path=config.get("browser_executable"),
             ) if args.browser else None
-            register_all_tools(agent, knowledge_brain=knowledge_brain, knowledge_campaign=knowledge_campaign, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())), cybersecurity_catalog=CybersecurityReferenceCatalog(), secure_site=secure_site)
+            register_all_tools(agent, knowledge_brain=knowledge_brain, knowledge_campaign=knowledge_campaign, memory_governor=memory_governor, browser=browser, media=media, quality=quality, design=design, pentest=pentest, adversary=adversary, skill_builder=SkillBuilder(config.get("workspace", Path.cwd())), cybersecurity_catalog=CybersecurityReferenceCatalog(), secure_site=secure_site)
             if args.interactive:
                 print("Modo interativo. Digite 'sair' para encerrar.")
                 while True:

@@ -1,0 +1,14 @@
+# Governador Local de Memória
+
+O KAWA-AI calcula um orçamento operacional para seus próprios trabalhadores; ele não cria partições físicas de RAM, não altera a configuração do kernel e não converte swap em memória reservada. A swap continua pertencendo ao sistema operacional e deve ser tratada como contingência lenta, não como capacidade normal da IA.
+
+| RAM instalada | Orçamento máximo da IA | Reserva preservada para o sistema |
+|---:|---:|---:|
+| Até 12 GiB | 50% da RAM total | 50% da RAM total |
+| Acima de 12 GiB | 6 GiB | Todo o restante |
+
+Em um dispositivo com 8 GiB, o teto da IA é 4 GiB. Com quatro trabalhadores ativos e memória disponível suficiente, cada trabalhador recebe uma recomendação de 1 GiB. Em um dispositivo com 16 GiB, o teto da IA é 6 GiB e 10 GiB ficam preservados; com quatro trabalhadores, a recomendação é 1,5 GiB por trabalhador.
+
+Antes de iniciar novos trabalhadores, o governador também lê `MemAvailable` no Linux e preserva pelo menos 512 MiB livres. Em pressão de memória, ele reduz a quantidade recomendada de trabalhadores ou bloqueia novos inícios. O resultado é consultivo: provedores externos e processos que não respeitam limites de processo não podem ser limitados fisicamente apenas por Python.
+
+Use `kawa --memory-budget` para consultar o plano real do dispositivo, ou `kawa --memory-budget --memory-workers 4` para ver a divisão para quatro trabalhadores.

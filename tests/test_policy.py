@@ -25,6 +25,7 @@ from agent.supabase_memory import SupabaseKnowledgeStore
 from agent.core import Agent, SYSTEM_PROMPT
 from agent.knowledge import KNOWLEDGE_SYSTEM_PROMPT, KnowledgeBrain
 from agent.knowledge_campaign import KnowledgeCampaign
+from agent.memory_governor import MemoryGovernor
 from agent.memory import ObsidianMemory, ObsidianMemoryError
 from agent.policy import Decision, ToolPolicy
 from agent.router import TaskRoute, TaskRouter
@@ -430,6 +431,26 @@ class ToolPolicyTests(unittest.TestCase):
         info = EnvironmentInspector.inspect()
         self.assertIn("platform", info)
         self.assertIn("root_privileges", info)
+
+    def test_memory_governor_uses_half_of_eight_gib_and_divides_four_workers(self):
+        plan = MemoryGovernor.plan_from_metrics(total_mib=8 * 1024, available_mib=8 * 1024, workers_requested=4)
+        self.assertEqual(plan.agent_budget_mib, 4 * 1024)
+        self.assertEqual(plan.system_reserve_mib, 4 * 1024)
+        self.assertEqual(plan.active_workers, 4)
+        self.assertEqual(plan.per_worker_mib, 1024)
+
+    def test_memory_governor_caps_six_gib_on_sixteen_gib_device_and_preserves_system(self):
+        plan = MemoryGovernor.plan_from_metrics(total_mib=16 * 1024, available_mib=16 * 1024, workers_requested=4)
+        self.assertEqual(plan.agent_budget_mib, 6 * 1024)
+        self.assertEqual(plan.system_reserve_mib, 10 * 1024)
+        self.assertEqual(plan.active_workers, 4)
+        self.assertEqual(plan.per_worker_mib, 1536)
+
+    def test_memory_governor_throttles_under_memory_pressure_without_using_swap_as_ram(self):
+        plan = MemoryGovernor.plan_from_metrics(total_mib=8 * 1024, available_mib=700, workers_requested=4, swap_total_mib=2048, swap_free_mib=2048)
+        self.assertEqual(plan.status, "throttled")
+        self.assertEqual(plan.active_workers, 0)
+        self.assertEqual(plan.swap_free_mib, 2048)
 
     def test_skills_catalog_renders_report(self):
         report = SkillsCatalog.render_report()

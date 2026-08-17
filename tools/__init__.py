@@ -179,7 +179,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, secure_site=None):
+def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, memory_governor=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, secure_site=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -217,6 +217,12 @@ def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, bro
             "knowledge_campaign",
             lambda domain="ALL", batch_size=250: knowledge_campaign.preview_batch(domain, batch_size),
             "Planeja ou consulta um lote local da campanha de conhecimento. Não acessa rede, não gera conteúdo e não altera o contador de itens validados. Input: {domain: 'NAT' ou 'ALL', batch_size: 250}"
+        )
+    if memory_governor:
+        agent.register_tool(
+            "memory_budget",
+            lambda workers=4: memory_governor.plan(workers).as_dict(),
+            "Consulta o orçamento local de memória e a divisão recomendada entre trabalhadores. Não altera RAM, swap, kernel ou processos. Input: {workers: 4}"
         )
     if browser:
         agent.register_tool(
