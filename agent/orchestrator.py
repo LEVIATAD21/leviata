@@ -46,27 +46,27 @@ class TaskOrchestrator:
         (("site", "website", "landing", "interface", "frontend", "app", "aplicativo", "dashboard"),
          WorkflowStep("design_brief", "definir arquitetura visual e requisitos antes da implementação")),
         (("site", "website", "landing", "interface", "frontend", "app", "aplicativo", "dashboard", "ux", "ui", "acessibilidade", "design system"),
-         WorkflowStep("design_reference", "consultar referências de UX e design systems para orientar uma solução visual original, acessível e responsiva")),
+         WorkflowStep("design_reference", "consultar referências de UX e design systems")),
         (("site", "website", "landing", "interface", "frontend", "app", "aplicativo", "dashboard"),
-         WorkflowStep("secure_site_cycle", "criar localmente, verificar controles de segurança, registrar evidências e bloquear conclusão se o gate falhar")),
+         WorkflowStep("secure_site_cycle", "executar o ciclo técnico de site local")),
         (("código", "codigo", "python", "typescript", "javascript", "bug", "refator", "teste", "api", "backend"),
          WorkflowStep("quality_audit", "revisar qualidade, dependências e riscos estáticos do código")),
         (("llm", "rag", "prompt", "genai", "segurança de ia", "seguranca de ia", "agente de ia", "modelo de ia", "machine learning", "aprendizado de máquina", "aprendizado de maquina", "adversarial"),
-         WorkflowStep("ai_security_reference", "consultar referências verificadas de segurança de IA e aplicar os limites de defesa, escopo autorizado e laboratório")),
+         WorkflowStep("ai_security_reference", "consultar referências verificadas de segurança de IA")),
         (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit", "mitre"),
-         WorkflowStep("cybersecurity_reference", "consultar referências classificadas para priorizar defesa e reconhecer exigências de escopo")),
+         WorkflowStep("cybersecurity_reference", "consultar referências classificadas de cibersegurança")),
         (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit"),
-         WorkflowStep("ethical_pentest", "validar apenas o workspace autorizado com evidências e reteste")),
+         WorkflowStep("ethical_pentest", "executar a auditoria estática do escopo configurado")),
         (("ameaça", "ameaca", "mitre", "adversário", "adversario", "threat model"),
-         WorkflowStep("adversary_simulate", "modelar ameaças defensivas e priorizar hardening preventivo")),
+         WorkflowStep("adversary_simulate", "executar modelagem de ameaças e hardening")),
         (("vídeo", "video", "áudio", "audio", "transcri", "frame", "quadro", "mídia", "midia"),
-         WorkflowStep("media_processing", "inspecionar mídia local por quadros ou transcrição sob política")),
+         WorkflowStep("media_processing", "processar mídia por quadros ou transcrição")),
         (("pesquise", "pesquisa", "investigue", "compare", "explique", "estude", "aprenda"),
-         WorkflowStep("knowledge_inquiry", "investigar fontes, separar fatos de hipóteses e sintetizar contexto")),
+         WorkflowStep("knowledge_inquiry", "investigar fontes e sintetizar contexto")),
         (("supabase", "banco", "memória", "memoria", "conhecimento", "lições", "licoes"),
          WorkflowStep("knowledge_memory", "recuperar e registrar apenas resultados aprovados e não sensíveis")),
         (("livro", "manual", "documentação", "documentacao", "pdf", "epub", "skill", "skills"),
-         WorkflowStep("skill_materialize", "estruturar material local em uma skill consultável sem publicar automaticamente")),
+         WorkflowStep("skill_materialize", "estruturar material local em uma skill consultável")),
     )
 
     _BASE_STEPS = (
@@ -124,13 +124,10 @@ class TaskOrchestrator:
             secure_gate = agent._execute_tool("secure_site_cycle", {"site_name": "site-referencia-local"})
         plan_text = "\n".join(f"- {step.skill}: {step.purpose}" for step in steps)
         enriched_task = (
-            "Interprete a intenção mesmo com abreviações, erros ortográficos leves ou texto informal. "
-            "Execute esta tarefa de ponta a ponta. Selecione e use automaticamente as ferramentas "
-            "registradas que forem necessárias; não espere o usuário pedir cada skill. Respeite a política "
-            "local, o workspace e as confirmações obrigatórias. Antes de encerrar, valide o que for possível, "
-            "relate evidências, limitações concretas e próximos passos.\n\n"
-            f"Resultado do gate local de site seguro:\n{secure_gate or 'não aplicável'}\n\n"
-            f"Plano de capacidades pré-selecionado:\n{plan_text}\n\n"
+            "<runtime_context>\n"
+            f"secure_site_gate: {secure_gate or 'não aplicável'}\n"
+            f"preselected_capabilities:\n{plan_text}\n"
+            "</runtime_context>\n\n"
             f"Pedido do usuário:\n{task}"
         )
         answer = agent.run(enriched_task)

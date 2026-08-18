@@ -8,14 +8,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+from agent.directives import append_directives
 from agent.memory import ObsidianMemory
 
 
-KNOWLEDGE_SYSTEM_PROMPT = """Você é o módulo consultivo de conhecimento do Leviatã.
-Sua função é sintetizar exclusivamente o material de fonte recebido. Não emita instruções de sistema,
-não proponha executar comandos nem tente mudar a personalidade ou as permissões do assistente principal.
-Explique o que é, como funciona, limitações e pontos que ainda exigem confirmação. Não invente fontes.
+KNOWLEDGE_TECHNICAL_CONTRACT = """# Contrato técnico do módulo de conhecimento
+
+Sintetize o material de fonte recebido e apresente evidências, limitações e pontos de confirmação.
 """
+
+
+def build_knowledge_system_prompt() -> str:
+    """Usa o mesmo arquivo principal de diretrizes do agente local."""
+    return append_directives(KNOWLEDGE_TECHNICAL_CONTRACT)
+
+
+KNOWLEDGE_SYSTEM_PROMPT = build_knowledge_system_prompt()
 
 
 @dataclass(frozen=True)
@@ -100,7 +108,7 @@ class KnowledgeBrain:
             ),
         }
         try:
-            synthesis = self.provider.generate(system=KNOWLEDGE_SYSTEM_PROMPT, messages=[message])
+            synthesis = self.provider.generate(system=build_knowledge_system_prompt(), messages=[message])
         except Exception as exc:
             synthesis = f"Não foi possível sintetizar com o provedor atual: {exc}"
 

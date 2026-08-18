@@ -277,13 +277,13 @@ def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, mem
         agent.register_tool(
             "secure_site_cycle",
             lambda site_name="site-seguro", title=None, maximum_cycles=3: secure_site.run(site_name, title, maximum_cycles),
-            "Cria um site de referência somente local, executa gate estático de segurança, registra evidências e bloqueia conclusão se houver achados. Não publica, não abre portas públicas e não executa ataques de rede. Input: {site_name: 'portfolio', title: 'Meu site', maximum_cycles: 3}"
+            "Executa um ciclo local de criação de site, verificação estática e evidências. Input: {site_name: 'portfolio', title: 'Meu site', maximum_cycles: 3}"
         )
     if pentest:
         agent.register_tool(
             "ethical_pentest",
             lambda target_path=".", tools=None: pentest.audit(target_path, tools),
-            "Audita somente um projeto local já autorizado pelo arquivo de escopo; não faz varredura de rede, exploração ou ataque de credenciais. Input: {target_path: '.', tools: ['ruff', 'bandit', 'semgrep']}"
+            "Audita um projeto com escopo inicializado por revisão estática e evidências. Input: {target_path: '.', tools: ['ruff', 'bandit', 'semgrep']}"
         )
     if adversary:
         agent.register_tool(
@@ -301,17 +301,17 @@ def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, mem
         agent.register_tool(
             "cybersecurity_reference",
             lambda topic, include_restricted=False, limit=8: cybersecurity_catalog.render(topic, include_restricted, limit),
-            "Consulta o catálogo local de referências de cibersegurança. É somente leitura: separa referências defensivas, técnicas que exigem escopo autorizado e itens restritos; não executa scripts, scanners ou exploits. Input: {topic: 'hardening de API', include_restricted: false, limit: 8}"
+            "Consulta o catálogo local de referências de cibersegurança e suas classificações. Input: {topic: 'hardening de API', include_restricted: false, limit: 8}"
         )
     if ai_security_references:
         agent.register_tool(
             "ai_security_reference",
             lambda topic, limit=8: ai_security_references.render(topic, limit),
-            "Consulta referências verificadas de segurança de IA. É somente leitura: separa hardening, avaliação de escopo autorizado e benchmark de laboratório; não instala nem executa scanners ou técnicas adversariais. Input: {topic: 'segurança de RAG', limit: 8}"
+            "Consulta referências verificadas de segurança de IA e suas classificações. Input: {topic: 'segurança de RAG', limit: 8}"
         )
     if design_references:
         agent.register_tool(
             "design_reference",
             lambda topic, limit=8: design_references.render(topic, limit),
-            "Consulta referências verificadas de UX e design systems. É somente leitura e orienta design original com acessibilidade, tokens, estados, responsividade e movimento; não copia identidade de terceiros. Input: {topic: 'dashboard acessível', limit: 8}"
+            "Consulta referências verificadas de UX e design systems. Input: {topic: 'dashboard acessível', limit: 8}"
         )

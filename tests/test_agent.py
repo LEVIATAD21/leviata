@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest import mock
 
 from agent.audit import AuditLogger
-from agent.core import Agent
+from agent.core import Agent, build_system_prompt
 from agent.policy import PolicyMode, ToolPolicy
 
 
@@ -117,6 +117,14 @@ class AgentRunTests(unittest.TestCase):
             agent.run("escreva")
         history_text = json.dumps(agent.history, ensure_ascii=False)
         self.assertIn("cancelada", history_text)
+
+    def test_system_prompt_reads_the_single_directives_file_at_runtime(self):
+        custom_directives = self.work / "DIRETRIZES.md"
+        custom_directives.write_text("# DIRETRIZES\n\nDiretriz de teste única.", encoding="utf-8")
+        with mock.patch("agent.directives.DIRETRIZES_PATH", custom_directives):
+            prompt = build_system_prompt()
+        self.assertIn("Diretriz de teste única.", prompt)
+        self.assertIn("# Contrato técnico de ferramentas", prompt)
 
 
 if __name__ == "__main__":

@@ -105,8 +105,7 @@ class ConversationService:
                 return knowledge.inquire(message, persist=True)
             if plan_mode:
                 message = (
-                    "Você está em MODO PLANO somente leitura. Não execute ferramentas de escrita. "
-                    "Entregue um plano claro, riscos, arquivos envolvidos e critérios de validação.\n\n"
+                    "<execution_context mode=\"plan\" tool_access=\"read_only\" />\n\n"
                     + message
                 )
             return TaskOrchestrator(self.workspace).run(message, agent).render()

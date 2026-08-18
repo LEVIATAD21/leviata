@@ -1,8 +1,7 @@
 """Ciclo local de desenvolvimento seguro para sites criados pelo Leviatã.
 
-O módulo cria somente um projeto de referência dentro do workspace, aplica
-controles básicos de hardening e registra evidências de verificações estáticas.
-Ele não publica, não abre portas públicas e não executa ataques de rede.
+O módulo cria um projeto de referência no workspace, aplica controles básicos
+de hardening e registra evidências de verificações estáticas.
 """
 
 from __future__ import annotations
