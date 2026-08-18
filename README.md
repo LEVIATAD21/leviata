@@ -1,3 +1,5 @@
+![Motion Banner](assets/motion-banner.gif)
+
 # Leviatã
 
 <p align="center">
