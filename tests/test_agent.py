@@ -123,8 +123,7 @@ class AgentRunTests(unittest.TestCase):
         custom_directives.write_text("# DIRETRIZES\n\nDiretriz de teste única.", encoding="utf-8")
         with mock.patch("agent.directives.DIRETRIZES_PATH", custom_directives):
             prompt = build_system_prompt()
-        self.assertIn("Diretriz de teste única.", prompt)
-        self.assertIn("# Contrato técnico de ferramentas", prompt)
+        self.assertEqual(prompt, "# DIRETRIZES\n\nDiretriz de teste única.")
 
 
 if __name__ == "__main__":

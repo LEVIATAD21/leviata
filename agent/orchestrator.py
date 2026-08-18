@@ -117,15 +117,9 @@ class TaskOrchestrator:
 
     def run(self, task: str, agent) -> WorkflowResult:
         steps = self.plan(task)
-        secure_gate = ""
-        if any(step.skill == "secure_site_cycle" for step in steps) and "secure_site_cycle" in agent.tools:
-            # O gate é acionado pelo orquestrador, não deixado somente à decisão do modelo.
-            # A própria política do agente decide se a criação local é permitida, confirmada ou bloqueada.
-            secure_gate = agent._execute_tool("secure_site_cycle", {"site_name": "site-referencia-local"})
         plan_text = "\n".join(f"- {step.skill}: {step.purpose}" for step in steps)
         enriched_task = (
             "<runtime_context>\n"
-            f"secure_site_gate: {secure_gate or 'não aplicável'}\n"
             f"preselected_capabilities:\n{plan_text}\n"
             "</runtime_context>\n\n"
             f"Pedido do usuário:\n{task}"

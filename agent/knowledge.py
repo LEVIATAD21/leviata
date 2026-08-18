@@ -8,19 +8,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
-from agent.directives import append_directives
+from agent.directives import load_directives
 from agent.memory import ObsidianMemory
 
 
-KNOWLEDGE_TECHNICAL_CONTRACT = """# Contrato técnico do módulo de conhecimento
-
-Sintetize o material de fonte recebido e apresente evidências, limitações e pontos de confirmação.
-"""
-
-
 def build_knowledge_system_prompt() -> str:
-    """Usa o mesmo arquivo principal de diretrizes do agente local."""
-    return append_directives(KNOWLEDGE_TECHNICAL_CONTRACT)
+    """Entrega ao módulo de conhecimento o mesmo texto único de DIRETRIZES.md."""
+    return load_directives()
 
 
 KNOWLEDGE_SYSTEM_PROMPT = build_knowledge_system_prompt()

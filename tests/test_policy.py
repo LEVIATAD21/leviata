@@ -150,7 +150,7 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("client_sensitive_storage", {item["kind"] for item in evidence["findings"]})
         self.assertEqual(len(evidence["adversarial_simulations"]), 4)
 
-    def test_site_orchestration_runs_secure_gate_before_model_response(self):
+    def test_site_orchestration_preselects_cycle_without_forcing_execution(self):
         class FinalProvider:
             def generate(self, system, messages):
                 self.messages = messages
@@ -160,10 +160,10 @@ class ToolPolicyTests(unittest.TestCase):
         agent = Agent(FinalProvider(), max_iterations=0, policy=ToolPolicy("proactive", self.workspace), audit_logger=audit)
         register_all_tools(agent, secure_site=SecureSiteCycle(self.workspace))
         result = TaskOrchestrator(self.workspace).run("Crie um site de portfólio", agent)
-        recorded = audit.log_file.read_text(encoding="utf-8")
         self.assertIn("Site preparado", result.answer)
-        self.assertIn("secure_site_cycle", recorded)
-        self.assertTrue((self.workspace / "leviata-secure-sites" / "site-referencia-local" / "leviata-secure-cycle").exists())
+        self.assertIn("secure_site_cycle", [step.skill for step in result.steps])
+        self.assertFalse(audit.log_file.exists())
+        self.assertFalse((self.workspace / "leviata-secure-sites").exists())
 
     def test_bancocn_scenario_uses_kawa_catalog_without_external_actions(self):
         class ScenarioProvider:
@@ -263,7 +263,7 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("[redigido]", content)
         self.assertNotIn("dado-pessoal", content)
 
-    def test_knowledge_brain_only_uses_search_and_returns_questions(self):
+    def test_knowledge_brain_uses_same_directives_and_returns_questions(self):
         class StubProvider:
             def generate(self, system, messages):
                 self.system = system
@@ -284,7 +284,7 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertIn("https://example.org/referencia", report)
         self.assertIn("Síntese baseada", report)
         self.assertEqual(provider.system, KNOWLEDGE_SYSTEM_PROMPT)
-        self.assertNotEqual(provider.system, SYSTEM_PROMPT)
+        self.assertEqual(provider.system, SYSTEM_PROMPT)
 
     def test_knowledge_brain_saves_markdown_only_when_requested(self):
         class StubProvider:

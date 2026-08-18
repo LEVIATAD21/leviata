@@ -7,51 +7,14 @@ import re
 from typing import List, Dict, Any, Callable
 
 from agent.audit import AuditLogger
-from agent.directives import append_directives
+from agent.directives import load_directives
 from agent.memory import ObsidianMemory
 from agent.policy import Decision, ToolPolicy
 from agent.rag import LocalRag, RagError
 
-TECHNICAL_SYSTEM_CONTRACT = """# Contrato técnico de ferramentas
-
-Use apenas ferramentas registradas para solicitar ações no ambiente. A decisão de
-execução, incluindo permissões e confirmações, é aplicada pelo runtime local.
-
-Ferramentas disponíveis:
-- shell: Executa qualquer comando no terminal Linux. Input: {"command": "..."}
-- read_file: Lê o conteúdo de um arquivo. Input: {"path": "..."}
-- write_file: Escreve conteúdo em um arquivo. Input: {"path": "...", "content": "..."}
-- web_search: Busca informações na web. Input: {"query": "..."}
-- web_fetch: Acessa uma URL e retorna o conteúdo. Input: {"url": "..."}
-- knowledge_inquiry: Investiga um assunto usando perguntas e fontes. Input: {"topic": "..."}
-- browser_navigate: Abre uma URL no perfil isolado do navegador. Input: {"url": "https://..."}
-- browser_read: Lê o texto visível da página atual. Input: {}
-- browser_click: Clica em um seletor CSS. Input: {"selector": "button.enviar"}
-- browser_type: Preenche um seletor CSS. Input: {"selector": "input[name=q]", "text": "..."}
-- browser_close: Fecha a sessão local isolada do navegador. Input: {}
-- media_extract_frames: Extrai quadros de um vídeo para a área de trabalho. Input: {"input_path": "...", "fps": 0.2}
-- media_transcribe: Transcreve mídia por whisper.cpp. Input: {"input_path": "..."}
-- quality_audit: Executa lint e auditoria estática no diretório de trabalho. Input: {"target_path": ".", "tools": ["ruff", "bandit", "semgrep"]}
-- design_brief: Cria brief de design e arquitetura Mermaid editáveis no diretório de trabalho. Input: {"request": "...", "medium": "site"}
-- secure_site_cycle: Executa um ciclo local de criação, verificação estática e evidências. Input: {"site_name": "portfolio", "title": "Meu site", "maximum_cycles": 3}
-- ethical_pentest: Audita um projeto com escopo inicializado, usando revisão estática e evidências. Input: {"target_path": ".", "tools": ["ruff", "bandit", "semgrep"]}
-- adversary_simulate: Modela ameaças e gera recomendações de hardening. Input: {"target_path": "."}
-- skill_materialize: Estrutura documentação local em um pacote SKILL.md com capítulos dentro do workspace. Input: {"source_path": "docs/manual.md", "skill_name": "manual"}
-- cybersecurity_reference: Consulta referências de cibersegurança classificadas. Input: {"topic": "hardening de API", "include_restricted": false, "limit": 8}
-
-Para usar uma ferramenta, responda EXATAMENTE neste formato JSON:
-<tool_call>
-{"tool": "nome_da_ferramenta", "input": {...}}
-</tool_call>
-
-Após receber o resultado da ferramenta, continue raciocínando e use mais ferramentas se necessário.
-Quando tiver a resposta final, responda normalmente sem usar o formato de tool_call.
-"""
-
-
 def build_system_prompt() -> str:
-    """Monta o prompt a partir do contrato técnico e do único arquivo de diretrizes."""
-    return append_directives(TECHNICAL_SYSTEM_CONTRACT)
+    """Entrega ao provedor exatamente o texto presente em DIRETRIZES.md."""
+    return load_directives()
 
 
 SYSTEM_PROMPT = build_system_prompt()
