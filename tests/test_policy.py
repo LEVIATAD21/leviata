@@ -14,6 +14,7 @@ from agent.pentest import EthicalPentestToolkit, PentestError
 from agent.adversary import AdversarySimulation, AdversaryError
 from agent.cybersecurity_catalog import CybersecurityReferenceCatalog
 from agent.ai_security_references import AISecurityReferenceCatalog
+from agent.web_security_knowledge import WebSecurityKnowledgeBase
 from agent.environment import EnvironmentInspector
 from agent.skills_catalog import SkillsCatalog
 from ui.service import UICommand
@@ -78,6 +79,48 @@ class ToolPolicyTests(unittest.TestCase):
         self.assertEqual(catalog.summary()["total"], 12)
         self.assertIn("LABORATORIO_AUTORIZADO", catalog.render("robustez adversarial"))
         self.assertEqual(ToolPolicy("observe", self.workspace).decide("ai_security_reference", {"topic": "RAG"}).decision, Decision.ALLOW)
+
+    def test_web_security_knowledge_is_consultive_classified_and_read_only(self):
+        data_file = self.workspace / "web_security_knowledge.json"
+        data_file.write_text(json.dumps({"entries": [
+            {"name": "Cross-Site Scripting (XSS)", "slug": "xss", "category": "Cliente, Navegador e Cross-Site",
+             "classification": "defensiva", "topics": "xss cross site scripting owasp a03 cwe-79",
+             "summary": "Execução de script no navegador da vítima.", "how_it_works": "Entrada não neutralizada é refletida no HTML.",
+             "detection": "Revisar contextos de saída e usar CSP em modo report.", "hardening": "Codificação por contexto, CSP e Trusted Types.",
+             "references": ["OWASP A03:2021", "CWE-79"]},
+            {"name": "Fuzzing de API", "slug": "api-fuzzing", "category": "Segurança de APIs",
+             "classification": "escopo_autorizado", "topics": "fuzzing api teste avaliacao",
+             "summary": "Envio de entradas malformadas a endpoints para achar falhas.", "how_it_works": "Gera entradas inesperadas e observa respostas.",
+             "detection": "Monitorar erros 5xx e latência anômala.", "hardening": "Validação de esquema e limites de taxa.",
+             "references": ["OWASP API Security Top 10 2023"]},
+        ]}, ensure_ascii=False), encoding="utf-8")
+        base = WebSecurityKnowledgeBase(data_file)
+        summary = base.summary()
+        self.assertEqual(summary["total"], 2)
+        self.assertEqual(summary["defensiva"], 1)
+        self.assertEqual(summary["escopo_autorizado"], 1)
+        result = base.search("xss")
+        self.assertEqual(result["matches"][0]["slug"], "xss")
+        self.assertEqual(result["matches"][0]["classification"], "defensiva")
+        rendered = base.render("api")
+        self.assertIn("ESCOPO_AUTORIZADO", rendered)
+        self.assertIn("Endurecimento:", rendered)
+        self.assertIn("Categorias disponíveis", base.render("índice"))
+        self.assertEqual(ToolPolicy("observe", self.workspace).decide("web_security_knowledge", {"topic": "xss"}).decision, Decision.ALLOW)
+
+    def test_bundled_web_security_knowledge_base_loads_valid_classifications(self):
+        base = WebSecurityKnowledgeBase()
+        summary = base.summary()
+        self.assertGreater(summary["total"], 0)
+        self.assertEqual(
+            summary["total"],
+            summary["defensiva"] + summary["escopo_autorizado"] + summary["laboratorio_autorizado"],
+        )
+        self.assertGreater(summary["categorias"], 0)
+
+    def test_orchestrator_consults_web_security_knowledge_for_web_tasks(self):
+        skills = [step.skill for step in TaskOrchestrator(self.workspace).plan("Como prevenir XSS e CSRF em uma aplicação web?")]
+        self.assertIn("web_security_knowledge", skills)
 
     def test_design_references_are_consultive_and_require_original_design(self):
         catalog = DesignReferenceCatalog()

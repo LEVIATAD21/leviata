@@ -179,7 +179,7 @@ def web_fetch(url: str) -> str:
         return f"Erro ao acessar URL: {str(e)}"
 
 
-def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, memory_governor=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, ai_security_references=None, design_references=None, secure_site=None):
+def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, memory_governor=None, browser=None, media=None, quality=None, design=None, pentest=None, adversary=None, skill_builder=None, cybersecurity_catalog=None, ai_security_references=None, web_security_knowledge=None, design_references=None, secure_site=None):
     """Registra todas as ferramentas no agente."""
     agent.register_tool(
         "shell",
@@ -308,6 +308,12 @@ def register_all_tools(agent, knowledge_brain=None, knowledge_campaign=None, mem
             "ai_security_reference",
             lambda topic, limit=8: ai_security_references.render(topic, limit),
             "Consulta referências verificadas de segurança de IA e suas classificações. Input: {topic: 'segurança de RAG', limit: 8}"
+        )
+    if web_security_knowledge:
+        agent.register_tool(
+            "web_security_knowledge",
+            lambda topic="", limit=6: web_security_knowledge.render(topic, limit),
+            "Consulta a base local de conhecimento de segurança web e cibernética (o que é, como funciona, detecção, endurecimento, referências), classificada e somente leitura. Use topic vazio ou 'índice' para ver as categorias. Input: {topic: 'prevenir XSS', limit: 6}"
         )
     if design_references:
         agent.register_tool(

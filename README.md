@@ -60,6 +60,7 @@ O Leviatã separa consultas de ações que modificam arquivos, serviços ou cont
 | Conexões persistentes e remoção explícita | [`docs/CONNECTIONS.md`](docs/CONNECTIONS.md) |
 | Conhecimento e campanhas auditáveis | [`docs/KNOWLEDGE_TEST_MATRIX.md`](docs/KNOWLEDGE_TEST_MATRIX.md) |
 | Referências de segurança de IA | [`docs/AI_SECURITY_SKILLS_ASSESSMENT.md`](docs/AI_SECURITY_SKILLS_ASSESSMENT.md) |
+| Base de conhecimento de segurança web e cibernética | [`docs/WEB_SECURITY_KNOWLEDGE.md`](docs/WEB_SECURITY_KNOWLEDGE.md) |
 | Design, UX e acessibilidade | [`docs/DESIGN_REFERENCE_ASSESSMENT.md`](docs/DESIGN_REFERENCE_ASSESSMENT.md) |
 
 ## Escopo

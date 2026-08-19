@@ -53,6 +53,8 @@ class TaskOrchestrator:
          WorkflowStep("quality_audit", "revisar qualidade, dependências e riscos estáticos do código")),
         (("llm", "rag", "prompt", "genai", "segurança de ia", "seguranca de ia", "agente de ia", "modelo de ia", "machine learning", "aprendizado de máquina", "aprendizado de maquina", "adversarial"),
          WorkflowStep("ai_security_reference", "consultar referências verificadas de segurança de IA")),
+        (("web", "http", "https", "xss", "sqli", "csrf", "ssrf", "idor", "jwt", "oauth", "cors", "tls", "cookie", "api", "injecao", "sessao", "autenticacao", "criptografia", "navegador", "owasp", "vulnerabilidade", "seguranca", "pentest", "hardening"),
+         WorkflowStep("web_security_knowledge", "consultar a base de conhecimento de segurança web e cibernética")),
         (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit", "mitre"),
          WorkflowStep("cybersecurity_reference", "consultar referências classificadas de cibersegurança")),
         (("segurança", "seguranca", "pentest", "vulnerabilidade", "owasp", "hardening", "audit"),

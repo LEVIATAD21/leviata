@@ -8,6 +8,7 @@ from pathlib import Path
 from agent.adversary import AdversarySimulation
 from agent.cybersecurity_catalog import CybersecurityReferenceCatalog
 from agent.ai_security_references import AISecurityReferenceCatalog
+from agent.web_security_knowledge import WebSecurityKnowledgeBase
 from agent.core import Agent
 from agent.design import DesignToolkit
 from agent.design_reference_catalog import DesignReferenceCatalog
@@ -89,6 +90,7 @@ class ConversationService:
             skill_builder=SkillBuilder(self.workspace),
             cybersecurity_catalog=CybersecurityReferenceCatalog(),
             ai_security_references=AISecurityReferenceCatalog(),
+            web_security_knowledge=WebSecurityKnowledgeBase(),
             design_references=DesignReferenceCatalog(),
             secure_site=secure_site,
         )
