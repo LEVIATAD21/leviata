@@ -25,7 +25,7 @@ O Leviatã foi feito para Linux Mint e Termux. Ele ajuda a transformar uma ordem
 Revise o instalador antes de executá-lo e, depois, instale com:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/LEVIATAD21/leviata/master/install.sh -o install-leviata.sh
+curl -fsSL https://raw.githubusercontent.com/LEVIATAD21/leviata/main/install.sh -o install-leviata.sh
 less install-leviata.sh
 bash install-leviata.sh
 source ~/.bashrc

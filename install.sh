@@ -2,7 +2,7 @@
 # ╔═══════════════════════════════════════════════════════════════╗
 # ║         Leviatã - Script de Instalação para Linux            ║
 # ║   Uso: curl -fsSL https://raw.githubusercontent.com/         ║
-# ║           LEVIATAD21/leviata/master/install.sh | bash        ║
+# ║           LEVIATAD21/leviata/main/install.sh | bash          ║
 # ╚═══════════════════════════════════════════════════════════════╝
 
 set -e
@@ -18,7 +18,7 @@ NC='\033[0m'
 INSTALL_DIR="$HOME/.leviata-ai"
 LEGACY_INSTALL_DIR="$HOME/.kawa-ai"
 REPO_URL="https://github.com/LEVIATAD21/leviata.git"
-REPO_BRANCH="master"
+REPO_BRANCH="main"
 # PIN opcional: SHA-256 do commit esperado (preencha após revisão manual do código)
 # Ex.: REPO_PINNED_COMMIT="7165d1d..."
 REPO_PINNED_COMMIT=""
