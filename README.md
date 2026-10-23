@@ -6,7 +6,7 @@
 
 O **Leviatã** é um assistente de terminal em Python que organiza tarefas por meio de um agente e de módulos especializados. O repositório reúne ferramentas para orquestração, referências técnicas, memória/RAG, navegador, voz, qualidade de código, criação de sites e práticas de segurança.
 
-A configuração inicial prioriza o **Ollama local** (\`qwen2.5:1.5b\`) e o modo de política \`ask\`. Outros provedores e integrações existem no código; quando habilitados, podem enviar prompts ou conteúdo aos respectivos serviços externos. A privacidade depende do provedor e das ferramentas efetivamente configuradas.
+A configuração inicial prioriza o **Ollama local** (`qwen2.5:1.5b`) e o modo de política `ask`. Outros provedores e integrações existem no código; quando habilitados, podem enviar prompts ou conteúdo aos respectivos serviços externos. A privacidade depende do provedor e das ferramentas efetivamente configuradas.
 
 ## Módulos do projeto
 
@@ -22,7 +22,7 @@ Os módulos disponíveis não significam que todas as integrações estejam conf
 ## Requisitos
 
 - Python 3.10 ou superior (recomendado: uma versão ainda suportada pelo ecossistema das dependências).
-- \`pip\` e \`venv\`.
+- `pip` e `venv`.
 - Ollama instalado e em execução para o modo local padrão.
 - Espaço em disco e memória compatíveis com o modelo escolhido.
 - Navegador e dependências adicionais apenas para recursos específicos.
@@ -31,32 +31,32 @@ Os módulos disponíveis não significam que todas as integrações estejam conf
 
 Na raiz do repositório:
 
-\`\`\`bash
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-\`\`\`
+```
 
 Instale e inicie o Ollama separadamente e baixe o modelo padrão, caso ainda não esteja disponível:
 
-\`\`\`bash
+```bash
 ollama pull qwen2.5:1.5b
 ollama list
-\`\`\`
+```
 
 Confira as opções disponíveis antes de iniciar uma tarefa:
 
-\`\`\`bash
+```bash
 python3 main.py --help
-\`\`\`
+```
 
-Para iniciar o modo interativo, execute \`python3 main.py\`. A configuração é mantida localmente em \`~/.leviata-ai/config.json\`; o programa também contém lógica para migrar uma configuração anterior de \`~/.kawa-ai/config.json\`.
+Para iniciar o modo interativo, execute `python3 main.py`. A configuração é mantida localmente em `~/.leviata-ai/config.json`; o programa também contém lógica para migrar uma configuração anterior de `~/.kawa-ai/config.json`.
 
 ## Configuração e privacidade
 
-- O padrão de configuração usa o provedor \`ollama\`, o endereço local \`http://localhost:11434\` e a política \`ask\`.
-- Revise \`~/.leviata-ai/config.json\` antes de alterar provedor, modelo, workspace ou modo de política.
+- O padrão de configuração usa o provedor `ollama`, o endereço local `http://localhost:11434` e a política `ask`.
+- Revise `~/.leviata-ai/config.json` antes de alterar provedor, modelo, workspace ou modo de política.
 - Provedores como OpenAI, Anthropic ou Google podem processar dados fora da máquina. Não use esses modos com informação confidencial sem avaliar as condições do serviço.
 - Tokens e perfis de conexões devem ser tratados como segredos. Não os cole no código, nos issues, em logs públicos ou em commits.
 - As ferramentas de navegador, shell e arquivos podem interagir com o ambiente configurado. Comece com um workspace de teste, revise as permissões e mantenha cópias de segurança.
@@ -70,11 +70,11 @@ Use as ferramentas de pentest e simulação somente em sistemas próprios, labor
 
 Se o modo local não responder, verifique:
 
-\`\`\`bash
+```bash
 ollama list
 curl -s http://localhost:11434/api/tags
 python3 main.py --help
-\`\`\`
+```
 
 Confirme também que o modelo configurado existe e que as dependências opcionais necessárias ao recurso escolhido estão instaladas.
 
