@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Leviatã — agente de terminal</title>
+  <desc id="desc">Identidade visual em azul-ciano para um agente de IA no terminal Linux.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#060A12"/><stop offset="1" stop-color="#101D32"/></linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#67E8F9"/><stop offset="1" stop-color="#3B82F6"/></linearGradient>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#7DD3FC" stroke-opacity=".08" stroke-width="1"/></pattern>
+  </defs>
+  <rect width="1200" height="360" rx="26" fill="url(#bg)"/>
+  <rect width="1200" height="360" rx="26" fill="url(#grid)"/>
+  <path d="M0 280 C190 225 280 340 470 275 S800 205 1200 260" fill="none" stroke="#2563EB" stroke-opacity=".22" stroke-width="2"/>
+  <path d="M0 300 C190 245 280 360 470 295 S800 225 1200 280" fill="none" stroke="#67E8F9" stroke-opacity=".18" stroke-width="1.5"/>
+  <g transform="translate(78 76)">
+    <rect x="0" y="0" width="190" height="190" rx="26" fill="#0B1728" stroke="url(#edge)" stroke-width="2"/>
+    <path d="M40 62 L70 95 L40 128" fill="none" stroke="#67E8F9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M91 132 H143" fill="none" stroke="#60A5FA" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="147" cy="53" r="6" fill="#67E8F9"/>
+    <circle cx="165" cy="53" r="6" fill="#3B82F6" opacity=".65"/>
+    <circle cx="129" cy="53" r="6" fill="#3B82F6" opacity=".35"/>
+    <path d="M100 25 L135 25 L135 37" fill="none" stroke="#67E8F9" stroke-opacity=".65" stroke-width="2"/>
+    <path d="M25 154 L25 165 L47 165" fill="none" stroke="#3B82F6" stroke-opacity=".8" stroke-width="2"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="320" y="140" fill="#F8FAFC" font-size="58" font-weight="700" letter-spacing="3">LEVIATÃ</text>
+    <text x="322" y="184" fill="#67E8F9" font-size="19" font-weight="700" letter-spacing="4">AGENTE DE TERMINAL LINUX</text>
+    <text x="322" y="224" fill="#C7D2E2" font-size="22">IA · Automação · Ferramentas · Segurança</text>
+    <rect x="322" y="252" width="440" height="2" rx="1" fill="url(#edge)" opacity=".8"/>
+    <text x="322" y="286" fill="#94A3B8" font-size="16" letter-spacing="2">LOCAL-FIRST, CONFIGURÁVEL E AUDITÁVEL</text>
+  </g>
+  <g transform="translate(968 84)" fill="none" stroke="url(#edge)" stroke-width="2">
+    <path d="M0 32 L42 8 L84 32 L84 80 L42 104 L0 80 Z" opacity=".75"/>
+    <path d="M18 42 L42 28 L66 42 L66 70 L42 84 L18 70 Z" opacity=".45"/>
+    <circle cx="42" cy="56" r="13" fill="#0E7490" fill-opacity=".3"/>
+    <path d="M42 43 V69 M29 56 H55" opacity=".85"/>
+  </g>
+</svg>
